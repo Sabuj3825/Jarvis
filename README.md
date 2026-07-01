@@ -189,7 +189,7 @@ python jarvis.py
 
 Every query shows its processing path in real-time:
 
-```
+```text
 🧐 You > WHO IS THE CM OF WEST BENGAL
 
 💾 [Cache Check]: Scanning knowledge base for known answer...
@@ -201,6 +201,15 @@ Every query shows its processing path in real-time:
 ✅ [Cloud Escalation]: Gemini response received.
 
 Jarvis [2026-07-01 22:15:42]: Mamata Banerjee is the Chief Minister of West Bengal.
+```
+
+**Example 2: Local AI & Cache Hit (Offline)**
+```text
+🧐 You > WHAT CAN YOU DO FOR ME
+
+💾 [Cache Check]: Scanning knowledge base for known answer...
+✅ [Cache Hit]: Serving answer from local knowledge matrix.
+Jarvis [2026-07-01 21:25:12]: I'm glad I could help with that question! If you have a specific area in mind or something you'd like to discuss, feel free to share it. I'll do my best to provide the information and insights you're looking for. Let's get started!
 ```
 
 ---
