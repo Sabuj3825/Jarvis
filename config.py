@@ -3,8 +3,8 @@ import os
 # --- DEVELOPER BRANDING OVERRIDES ---
 DEVELOPER_NAME = "Sabuj De"
 DEVELOPER_ALIAS = "Green Bhai"
-YOUTUBE_CHANNEL = "https://youtube.com/@GreenBhai"
-GITHUB_PROFILE = "https://github.com/sabuj-de"
+YOUTUBE_CHANNEL = "https://www.youtube.com/@cirkimatrix"
+GITHUB_PROFILE = "https://github.com/Sabuj3825"
 TELEGRAM_CHANNEL = "https://t.me/GreenBhaiOfficial"
 
 # --- PERSISTENT DUAL-LAYER STORAGE BASES ---

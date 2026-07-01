@@ -1,7 +1,7 @@
 # 🤖 JARVIS — AI Terminal Assistant
 ### Version 6.0 | Local-First | Termux Edition
 
-> **Built by [Green Bhai (Sabuj De)](https://youtube.com/@GreenBhai)**
+> **Built by [Green Bhai (Sabuj De)](https://www.youtube.com/@cirkimatrix)**
 > A local-first, offline-capable AI terminal assistant engineered for Termux (Android CLI).
 > Runs on your phone — no PC, no subscription, no cloud dependency.
 
@@ -101,8 +101,8 @@ Jarvis/
 ### Step 1 — Clone the project
 ```bash
 pkg install git -y
-git clone https://github.com/sabuj-de/jarvis
-cd jarvis
+git clone https://github.com/Sabuj3825/Jarvis
+cd Jarvis
 ```
 
 ### Step 2 — Run the one-shot setup script
@@ -309,8 +309,8 @@ Expected output:
 
 | Platform | Link |
 |---|---|
-| 🎥 YouTube | [youtube.com/@GreenBhai](https://youtube.com/@GreenBhai) |
-| 💻 GitHub | [github.com/sabuj-de](https://github.com/sabuj-de) |
+| 🎥 YouTube | [youtube.com/@cirkimatrix](https://www.youtube.com/@cirkimatrix) |
+| 💻 GitHub | [github.com/Sabuj3825](https://github.com/Sabuj3825) |
 | 📢 Telegram | [t.me/GreenBhaiOfficial](https://t.me/GreenBhaiOfficial) |
 
 ---
