@@ -190,7 +190,7 @@ python jarvis.py
 Every query shows its processing path in real-time:
 
 ```text
-🧐 You > WHO IS THE CM OF WEST BENGAL
+🧐 You > WHO IS THE CEO OF GOOGLE
 
 💾 [Cache Check]: Scanning knowledge base for known answer...
 🔍 [Cache Miss]: No cached answer. Routing to live pipeline...
@@ -200,7 +200,7 @@ Every query shows its processing path in real-time:
 📡 [Cloud Escalation]: Connecting to Gemini API matrix...
 ✅ [Cloud Escalation]: Gemini response received.
 
-Jarvis [2026-07-01 22:15:42]: Mamata Banerjee is the Chief Minister of West Bengal.
+Jarvis [2026-07-01 22:15:42]: Sundar Pichai is the Chief Executive Officer of Google.
 ```
 
 **Example 2: Local AI & Cache Hit (Offline)**
