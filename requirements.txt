@@ -1,0 +1,10 @@
+# ============================================================
+# JARVIS — Python Package Requirements
+# Install with: pip install -r requirements.txt
+# ============================================================
+
+colorama        # Terminal color output
+requests        # HTTP requests (web search, Gemini API)
+beautifulsoup4  # Web scraper HTML parser
+wikipedia       # Wikipedia knowledge lookup
+yt-dlp          # YouTube audio/video streaming

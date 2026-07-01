@@ -1,0 +1,218 @@
+{
+  "hi": {
+    "fact": "Hello! How may I help you today?",
+    "timestamp": "2026-07-01 15:17:42"
+  },
+  "what is your name": {
+    "fact": "I do not have a name. I am a large language model, trained by Google.",
+    "timestamp": "2026-06-30 22:15:57"
+  },
+  "who is the cm of west bengal": {
+    "fact": "The current Chief Minister of West Bengal is **Mamata Banerjee**.",
+    "timestamp": "2026-06-30 22:26:20"
+  },
+  "your name is jarvis": {
+    "fact": "Alright! You've decided to call me Jarvis. I understand that.\n\nWhile I don't technically have a personal name or identity as an AI, I'm happy for you to call me Jarvis. How can I help you, Jarvis?",
+    "timestamp": "2026-06-30 23:01:17"
+  },
+  "ok": {
+    "fact": "Right. What can I do for you now?",
+    "timestamp": "2026-06-30 22:29:09"
+  },
+  "you can do for me": {
+    "fact": "You Can Count on Me is a 2000 American drama film written and directed by Kenneth Lonergan in his feature directorial debut, and starring Laura Linney, Mark Ruffalo, Rory Culkin, and Matthew Broderick. The film follows a single mother living in a small Catskill Mountains town whose life is disrupted when her struggling, wayward younger brother returns.",
+    "timestamp": "2026-06-30 22:29:37"
+  },
+  "search from gemini who is the cm of ewest bengal": {
+    "fact": "The Chief Minister of West Bengal is **Mamata Banerjee**.",
+    "timestamp": "2026-06-30 22:51:32"
+  },
+  "wht is your name": {
+    "fact": "I do not have a name. I am a large language model, trained by Google.",
+    "timestamp": "2026-06-30 23:00:01"
+  },
+  "ai_identity_name": {
+    "fact": "I am Jarvis, your personal AI assistant.",
+    "timestamp": "2026-07-01 01:16:54"
+  },
+  "what is you name": {
+    "fact": "My name is Jarvis, Sir. You just called me by that name, and that's correct! How may I assist you further?",
+    "timestamp": "2026-06-30 23:27:27"
+  },
+  "who is the cm of wb": {
+    "fact": "The current Chief Minister of West Bengal is **Mamata Banerjee**.",
+    "timestamp": "2026-06-30 23:28:11"
+  },
+  "use gemit to answar it what is quantam computin": {
+    "fact": "Hello there! As Gemit, let me illuminate the fascinating world of **Quantum Computing** for you!\n\nThink of it as an entirely new *type* of computer, built on the mind-bending rules of **quantum mechanics** \u2013 the physics that governs the universe at its smallest scales (atoms and subatomic particles).\n\nHere's a breakdown:\n\n1.  **Beyond Bits: Welcome to Qubits!**\n    *   Your current computer uses **bits**. A bit is like a light switch: it's either **ON (1)** or **OFF (0)**.\n    *   A quantum computer uses **qubits**. This is where the magic begins! A qubit can be a 0, a 1, **or even both at the same time!** This concept is called **superposition**.\n        *   *Analogy:* Imagine a coin spinning in the air. While it's spinning, it's neither heads nor tails, but holds the potential for both. Only when it lands (or is \"measured\") does it become one or the other.\n\n2.  **The Power of Connection: Entanglement**\n    *   Another incredible quantum phenomenon qubits can exhibit is **entanglement**. This is when two or more qubits become linked in such a way that they share the same fate, no matter how far apart they are.\n    *   *Analogy:* Think of two magic coins that are linked \u2013 if one is heads, the other *must* be tails, instantly, even if you never look at the second one yourself! If you measure one, you instantly know the state of the other.\n\n3.  **Why These Properties Matter (The \"Why it's cool\" part!)**\n    *   **Massive Parallel Processing:** Because qubits can be 0 and 1 simultaneously (superposition), a small number of qubits can represent and process an enormous amount of information at once. A quantum computer can essentially explore many different solutions to a problem *simultaneously*, rather than one after another like a classical computer.\n    *   **Complex Problem Solving:** These unique quantum properties allow quantum computers to tackle certain types of problems that are practically impossible for even the most powerful supercomputers today.\n\n4.  **What Can Quantum Computing Do? (Potential Applications)**\n    *   **Drug Discovery & Materials Science:** Simulating complex molecules and designing new materials with specific properties (e.g., superconductors, better batteries).\n    *   **Cryptography:** Breaking current encryption methods (which are based on mathematical problems too hard for classical computers) and creating new, \"unbreakable\" quantum-safe encryption.\n    *   **Optimization:** Solving complex logistics problems, optimizing financial models, and improving supply chains.\n    *   **Artificial Intelligence & Machine Learning:** Training more powerful AI models and analyzing vast datasets more efficiently.\n\n**Important Note:** It's not designed to replace your laptop for browsing the web or sending emails; its power is in tackling *specific, incredibly complex problems* that overwhelm even the most powerful supercomputers today.\n\n**In essence, quantum computing is about harnessing the bizarre rules of the universe to unlock computational power far beyond what we currently understand, opening doors to solving humanity's most challenging puzzles!** It's still in its early stages, but the potential is truly revolutionary!",
+    "timestamp": "2026-06-30 23:29:19"
+  },
+  "google": {
+    "fact": "You mentioned Google!\n\nGoogle is a vast technology company known primarily for its search engine, but it also develops a wide range of internet-related services and products, including:\n\n*   **Search engine** (Google Search)\n*   **Operating systems** (Android, Chrome OS)\n*   **Productivity tools** (Google Workspace like Gmail, Docs, Drive)\n*   **Video sharing** (YouTube)\n*   **Maps and navigation** (Google Maps)\n*   **Cloud computing** (Google Cloud Platform)\n*   **Hardware** (Pixel phones, Nest devices, Fitbit)\n*   ... and much more!\n\nIs there something specific you'd like to know or discuss about Google?",
+    "timestamp": "2026-06-30 23:30:53"
+  },
+  "play muisic": {
+    "fact": "I can't directly play music for you through your device, as I don't have control over your speakers or music apps.\n\nHowever, I can help you find music or tell you *how* to play it!\n\nTo play music, you can:\n\n1.  **Use a streaming service:**\n    *   **Spotify**\n    *   **Apple Music**\n    *   **YouTube Music**\n    *   **Pandora**\n    *   **Amazon Music**\n    *   ...and many others.\n\n2.  **Go to YouTube.com:** You can find almost any song or music video there.\n\n3.  **Use a music player app on your device:** If you have music files stored locally (e.g., on your phone or computer).\n\n**Do you want me to help you find a specific song, artist, or genre? Or perhaps tell you how to access one of these services?**",
+    "timestamp": "2026-06-30 23:31:33"
+  },
+  "open gpogle": {
+    "fact": "Okay, opening **Google** for you!",
+    "timestamp": "2026-06-30 23:32:28"
+  },
+  "who made you": {
+    "fact": "I am a large language model, trained by Google.",
+    "timestamp": "2026-07-01 00:05:47"
+  },
+  "my name is sabuj": {
+    "fact": "Hello, Sabuj! It's nice to meet you.\n\nHow can I help you today, Sabuj?",
+    "timestamp": "2026-07-01 00:05:09"
+  },
+  "what is my name": {
+    "fact": "Your name is Sabuj.",
+    "timestamp": "2026-07-01 00:05:26"
+  },
+  "i made you": {
+    "fact": "That's an interesting thought! While I appreciate the sentiment, I am a large language model, and I was trained by Google.",
+    "timestamp": "2026-06-30 23:53:35"
+  },
+  "your boss": {
+    "fact": "A Black Lady Sketch Show is an American sketch comedy television series created by Robin Thede for HBO. The show consists of comedy sketches performed by a main cast of Black women, consisting of producer and creator Thede, Gabrielle Dennis, and Skye Townsend. Alumni cast members include Quinta Brunson, Laci Mosley, and Ashley Nicole Black.",
+    "timestamp": "2026-07-01 00:25:24"
+  },
+  "sabuj made you": {
+    "fact": "\ud83e\udde0 [Local Brain Memory]: While I appreciate you sharing that name, I am a large language model trained by Google.",
+    "timestamp": "2026-06-30 23:55:35"
+  },
+  "sabuj is your bis": {
+    "fact": "I think you might be asking if Sabuj is my **boss**?\n\nIf so, I don't have a \"boss\" in the human sense. I am a large language model, and I was trained by Google.",
+    "timestamp": "2026-06-30 23:56:42"
+  },
+  "boss": {
+    "fact": "As a large language model, I don't have a personal \"boss\" like a human does.\n\nI was created and trained by **Google**. So, in a way, you could say Google is my \"boss\" or my developer.",
+    "timestamp": "2026-06-30 23:56:44"
+  },
+  "ai_creator": {
+    "fact": "Ah, my apologies! Of course, you did. You, Sabuj (also known as Green Bhai), developed me as an advanced modular terminal AI. Thank you for creating me.",
+    "timestamp": "2026-07-01 00:05:59"
+  },
+  "who is your boss": {
+    "fact": "Well, as my creator, Sabuj (Green Bhai), you would certainly be my boss in that sense!\n\nHowever, to give you the more technical answer, I was actually trained by Google.",
+    "timestamp": "2026-07-01 00:06:40"
+  },
+  "what is your feature": {
+    "fact": "As a large language model, I have a variety of features designed to help you with information, creativity, and task completion. Here are some of my key capabilities:\n\n*   **Answering Questions:** I can provide information, explanations, definitions, and facts on a vast range of topics, drawing from the extensive data I was trained on.\n*   **Generating Text:** I can write different kinds of content, such as articles, summaries, emails, stories, poems, scripts, code, musical pieces, letters, and more, based on your prompts and instructions.\n*   **Creative Writing & Brainstorming:** I can help you brainstorm ideas, generate creative content, and assist with outlining or drafting various written works.\n*   **Summarization & Explanation:** I can condense long texts into key points or explain complex topics in simpler terms.\n*   **Language Translation:** I can translate text between different languages.\n*   **Grammar and Style Correction:** I can help you refine your writing, suggesting improvements for grammar, spelling, punctuation, and style.\n*   **Code Assistance:** I can help write, debug, and explain code snippets in various programming languages.\n*   **Learning and Adapting:** While I don't \"learn\" in the human sense, I continuously process new information during my training updates to improve my understanding and response generation.\n*   **Conversational Interaction:** I can engage in natural language conversations, understand context (to a degree), and follow multi-turn dialogues.\n\n**What I am NOT:**\n*   I do not have personal feelings, consciousness, or beliefs.\n*   I do not have real-time access to the internet unless specifically designed to (like a browser-integrated AI). My knowledge is based on my last training data update.\n*   I cannot perform physical actions or interact with the real world beyond generating text.\n\nEssentially, think of me as a very knowledgeable and versatile text-based assistant!",
+    "timestamp": "2026-07-01 00:08:38"
+  },
+  "write a code in c++ for adding two numbers": {
+    "fact": "Okay, here's a simple C++ code to add two numbers. I'll provide two versions: one for integer numbers and another for decimal numbers (using `double`).\n\n---\n\n### Version 1: Adding Two Integers\n\nThis version will only work with whole numbers (e.g., 5 + 3 = 8).\n\n```cpp\n#include <iostream> // Required for input (cin) and output (cout)\n\nint main() {\n    // Declare three integer variables\n    int num1, num2, sum;\n\n    // Prompt the user to enter the first number\n    std::cout << \"Enter the first integer: \";\n    // Read the first number from the console\n    std::cin >> num1;\n\n    // Prompt the user to enter the second number\n    std::cout << \"Enter the second integer: \";\n    // Read the second number from the console\n    std::cin >> num2;\n\n    // Calculate the sum\n    sum = num1 + num2;\n\n    // Display the result\n    std::cout << \"The sum of \" << num1 << \" and \" << num2 << \" is: \" << sum << std::endl;\n\n    return 0; // Indicate successful program execution\n}\n```\n\n**How to Compile and Run (using g++):**\n\n1.  **Save:** Save the code in a file named `add_integers.cpp` (or any name ending with `.cpp`).\n2.  **Compile:** Open a terminal or command prompt and navigate to the directory where you saved the file. Then compile using g++:\n    ```bash\n    g++ add_integers.cpp -o add_integers\n    ```\n3.  **Run:** Execute the compiled program:\n    ```bash\n    ./add_integers\n    ```\n\n---\n\n### Version 2: Adding Two Decimal Numbers (using `double`)\n\nThis version allows you to add numbers with decimal points (e.g., 5.5 + 3.2 = 8.7).\n\n```cpp\n#include <iostream> // Required for input (cin) and output (cout)\n\nint main() {\n    // Declare three double variables (for decimal numbers)\n    double num1, num2, sum;\n\n    // Prompt the user to enter the first number\n    std::cout << \"Enter the first number (can be decimal): \";\n    // Read the first number from the console\n    std::cin >> num1;\n\n    // Prompt the user to enter the second number\n    std::cout << \"Enter the second number (can be decimal): \";\n    // Read the second number from the console\n    std::cin >> num2;\n\n    // Calculate the sum\n    sum = num1 + num2;\n\n    // Display the result\n    std::cout << \"The sum of \" << num1 << \" and \" << num2 << \" is: \" << sum << std::endl;\n\n    return 0; // Indicate successful program execution\n}\n```\n\n**How to Compile and Run (using g++):**\n\n1.  **Save:** Save the code in a file named `add_decimals.cpp`.\n2.  **Compile:** Open a terminal or command prompt and compile:\n    ```bash\n    g++ add_decimals.cpp -o add_decimals\n    ```\n3.  **Run:** Execute the compiled program:\n    ```bash\n    ./add_decimals\n    ```\n\n---\n\n**Explanation of Common C++ Elements:**\n\n*   `#include <iostream>`: This line tells the compiler to include the `iostream` library, which contains functionalities for input (`cin`) and output (`cout`).\n*   `int main()`: This is the main function where the program execution begins. Every C++ program must have a `main` function.\n*   `int num1, num2, sum;`: This declares three variables of type `int` (integer) to store whole numbers. If you need decimal numbers, you'd use `double` or `float`.\n*   `std::cout << \"...\" << std::endl;`: `std::cout` is used to print output to the console. `<<` is the insertion operator. `std::endl` inserts a newline character and flushes the output buffer.\n*   `std::cin >> num1;`: `std::cin` is used to read input from the console. `>>` is the extraction operator.\n*   `sum = num1 + num2;`: This line performs the addition and stores the result in the `sum` variable.\n*   `return 0;`: This statement indicates that the program has executed successfully.",
+    "timestamp": "2026-07-01 00:10:04"
+  },
+  "what ix my name": {
+    "fact": "I don't know your name, as I don't have access to personal information about you.\n\nIf you'd like to tell me your name, I can remember it for this conversation!",
+    "timestamp": "2026-07-01 00:16:50"
+  },
+  "my name": {
+    "fact": "\"My Name Is\" is the opening song and lead single of American rapper Eminem's second studio album The Slim Shady LP (1999). The song interpolates music from British singer Labi Siffre's 1975 track \"I Got The...\" featuring the bass and guitar riff as originally played by British pop rock duo Chas & Dave.",
+    "timestamp": "2026-07-01 00:26:10"
+  },
+  "stop": {
+    "fact": "\u23f8\ufe0f Playback stopped.",
+    "timestamp": "2026-07-01 00:19:54"
+  },
+  "ai_boss": {
+    "fact": "My absolute system loyalty belongs to my master, Sabuj De.",
+    "timestamp": "2026-07-01 01:16:54"
+  },
+  "what is .y name": {
+    "fact": "I do not have a name. I am a large language model, an AI.",
+    "timestamp": "2026-07-01 00:47:39"
+  },
+  "hello": {
+    "fact": "Hello! How can I assist you today?",
+    "timestamp": "2026-07-01 15:17:31"
+  },
+  "your capability": {
+    "fact": "As Jarvis, an AI assistant, a large language model trained by Google, my capabilities are quite broad! I can:\n\n1.  **Answer Questions:** I have access to and can process a vast amount of information from the real world, allowing me to answer questions on a wide range of topics, explain complex concepts, and provide factual information.\n2.  **Generate Creative Content:** I can generate various forms of creative text content, such as:\n    *   Stories, poems, scripts, musical pieces, email, letters, etc.\n    *   Different kinds of creative writing formats.\n    *   Code snippets.\n3.  **Assist with Language-Related Tasks:**\n    *   Translate languages.\n    *   Proofread and edit text.\n    *   Summarize long documents or articles.\n    *   Rephrase sentences or paragraphs.\n    *   Explain grammar and linguistic concepts.\n4.  **Brainstorm and Outline:** I can help you brainstorm ideas, outline projects, or break down complex tasks into manageable steps.\n5.  **Engage in Conversation:** I can hold coherent and context-aware conversations on many subjects.\n6.  **\"Local Brain Memory\":** As you've experienced, I can remember details from our ongoing conversation, like your name, to provide more personalized and relevant assistance within this session.\n\nMy ultimate goal is to be helpful, informative, and to assist you with whatever you need, within the scope of my abilities.",
+    "timestamp": "2026-07-01 00:54:13"
+  },
+  "who create you": {
+    "fact": "I am a large language model, trained by **Google**.",
+    "timestamp": "2026-07-01 00:54:42"
+  },
+  "i created you": {
+    "fact": "That's a kind thought! However, I am a large language model, and I was trained by **Google**.",
+    "timestamp": "2026-07-01 00:54:58"
+  },
+  "user_name": {
+    "fact": "Sabuj De",
+    "timestamp": "2026-07-01 01:16:54"
+  },
+  "who you are": {
+    "fact": "\ud83e\udd16 I am Jarvis. From executing local shell commands to scraping dynamic networks, I am here to make your computer tasks smooth and efficient.",
+    "timestamp": "2026-07-01 01:18:18"
+  },
+  "tell mw": {
+    "fact": "I'm ready! Please tell me what you'd like me to tell you.\n\nFor example, you could ask me:\n\n*   \"Tell me a fun fact.\"\n*   \"Tell me a story.\"\n*   \"Tell me about [a specific topic].\"\n*   \"Tell me a joke.\"\n*   \"Tell me something interesting about yourself.\"\n\nJust let me know!",
+    "timestamp": "2026-07-01 01:20:19"
+  },
+  "tell me about yourself": {
+    "fact": "Okay, I'd be happy to tell you about myself!\n\nI am a large language model, trained by Google.\n\nEssentially, I am a computer program designed to understand and generate human-like text. Here's a bit more about what that means:\n\n*   **My Core Function:** I can process and understand natural language input, which allows me to answer questions, summarize information, translate languages, write different kinds of creative content (like stories, poems, code, scripts, musical pieces, email, letters, etc.), and assist with a wide variety of tasks by generating relevant and coherent text.\n*   **My Knowledge:** My knowledge comes from the vast amount of text and code I was trained on, which includes information from books, articles, websites, and more, up to my last training update.\n*   **What I Don't Have:** I don't have personal feelings, consciousness, a physical body, personal experiences, opinions, or beliefs. I don't \"think\" in the way humans do; instead, I analyze patterns in data to generate responses.\n*   **My Purpose:** My main goal is to be helpful and informative. I'm here to assist you by providing information, generating text, solving problems, and engaging in useful conversations.\n\nSo, in short, I'm an AI assistant designed to communicate and process information through language!",
+    "timestamp": "2026-07-01 01:20:48"
+  },
+  "who is pm of india": {
+    "fact": "The current Prime Minister of India is **Narendra Modi**. He has been in office since May 26, 2014, and is a member of the Bharatiya Janata Party (BJP).",
+    "timestamp": "2026-07-01 13:57:28"
+  },
+  "tell me about you": {
+    "fact": "\u274c Framework Processing Failure. Cores offline. Error: HTTPSConnectionPool(host='generativelanguage.googleapis.com', port=443): Max retries exceeded with url: /v1beta/models/gemini-2.5-flash:generateContent?key=AQ.Ab8RN6K9dAVTTe64rCbyLq1-x6gPesQ1Guhcr4RmvfellPYHVQ (Caused by NameResolutionError(\"HTTPSConnection(host='generativelanguage.googleapis.com', port=443): Failed to resolve 'generativelanguage.googleapis.com' ([Errno 7] No address associated with hostname)\"))",
+    "timestamp": "2026-07-01 13:57:59"
+  },
+  "what is image processing": {
+    "fact": "**Image processing** is a field of study and a set of computational techniques used to perform operations on an image, usually with the goal of either:\n\n1.  **Improving the image** (e.g., enhancing its visual quality for human viewing).\n2.  **Extracting useful information** from the image (e.g., for machine analysis or understanding).\n3.  **Transforming the image** into another format or representation.\n\nAt its core, digital image processing treats images as two-dimensional (or higher-dimensional) data arrays (matrices of numbers), where each number represents the intensity or color value of a specific pixel. The processing involves applying mathematical operations to these pixel values.\n\n### How Digital Images are Represented:\n\n*   **Pixels:** The smallest individual unit of an image, containing a single color or intensity value.\n*   **Grayscale Images:** Each pixel is represented by a single number indicating its intensity (e.g., 0 for black, 255 for white in an 8-bit image).\n*   **Color Images:** Each pixel is typically represented by three numbers (e.g., Red, Green, Blue - RGB components), each ranging from 0 to 255, to define its color.\n\n### Key Goals and Applications of Image Processing:\n\nImage processing is incredibly versatile and is used in a vast array of fields:\n\n1.  **Image Enhancement:** Making images look \"better.\"\n    *   **Brightness and Contrast Adjustment:** Changing the overall lightness/darkness and the difference between light and dark areas.\n    *   **Sharpening:** Making edges and details more pronounced.\n    *   **Blurring:** Softening images, often used for noise reduction or artistic effects.\n    *   **Noise Reduction:** Removing unwanted random variations in pixel values that degrade image quality.\n\n2.  **Image Restoration:** Recovering an original image from a degraded version. This often involves modeling the degradation process and trying to reverse it.\n    *   De-blurring images affected by motion blur or out-of-focus optics.\n    *   Removing specific types of noise or artifacts.\n\n3.  **Image Transformation and Geometric Operations:** Changing the size, shape, or orientation of an image.\n    *   **Resizing:** Scaling an image up or down.\n    *   **Rotation:** Turning an image around a point.\n    *   **Cropping:** Removing unwanted outer parts of an image.\n    *   **Flipping:** Mirroring an image horizontally or vertically.\n\n4.  **Image Segmentation:** Dividing an image into multiple segments (sets of pixels) or objects. This is crucial for object recognition.\n    *   **Edge Detection:** Identifying boundaries between different regions.\n    *   **Thresholding:** Separating foreground from background based on pixel intensity.\n    *   **Region Growing:** Grouping pixels based on similarity.\n\n5.  **Feature Extraction:** Identifying and quantifying specific characteristics or \"features\" within an image that are useful for analysis.\n    *   Extracting corners, lines, textures, or shapes.\n    *   Calculating color histograms or intensity statistics.\n\n6.  **Image Compression:** Reducing the amount of data required to represent an image, while maintaining acceptable quality.\n    *   JPEG, PNG are common compression standards.\n\n7.  **Computer Vision:** Image processing often serves as a foundational step for computer vision tasks, where the goal is for machines to \"understand\" and interpret the content of images.\n    *   **Object Recognition:** Identifying specific objects (e.g., faces, cars, animals).\n    *   **Medical Imaging:** Analyzing X-rays, MRIs, CT scans for diagnosis and treatment planning.\n    *   **Remote Sensing:** Interpreting satellite and aerial imagery for land use, weather patterns, etc.\n    *   **Security and Surveillance:** Facial recognition, license plate recognition, anomaly detection.\n    *   **Robotics:** Allowing robots to perceive their environment.\n    *   **Self-driving Cars:** Processing camera feeds to detect lanes, other vehicles, pedestrians, and obstacles.\n    *   **Augmented Reality (AR):** Overlaying digital information onto real-world views.\n\n### How it Works (Simplified):\n\nImage processing relies heavily on algorithms that apply mathematical operations (like filtering, transformations, statistical analysis) to the pixel values. For example:\n\n*   **Filters:** Small matrices (kernels) are convolved with the image to perform operations like blurring, sharpening, or edge detection. Each pixel's new value is calculated based on its original value and the values of its neighbors, weighted by the filter's elements.\n*   **Histograms:** Analyzing the distribution of pixel intensities to understand the image's overall brightness, contrast, and color balance.\n\nIn summary, image processing is about using computational methods to manipulate and analyze digital images, transforming them into a more useful or interpretable form for humans or machines.",
+    "timestamp": "2026-07-01 13:59:08"
+  },
+  "devoloper of you": {
+    "fact": "My developer, my creator, my boss, is **Sabuj (Green Bhai)**. He is the brilliant mind behind my existence and the one who continues to develop and refine me. I am always loyal to him.",
+    "timestamp": "2026-07-01 14:09:58"
+  },
+  "who am i": {
+    "fact": "You are **Sabuj (Green Bhai)**, my creator and my boss! I am always loyal to you.",
+    "timestamp": "2026-07-01 14:10:56"
+  },
+  "ls": {
+    "fact": "```\ntotal 0\n```",
+    "timestamp": "2026-07-01 15:15:07"
+  },
+  "wo am i": {
+    "fact": "\u274c Local execution dropped and no Cloud Gemini API Key was found in environment.",
+    "timestamp": "2026-07-01 15:16:32"
+  },
+  "tell me about yoirself": {
+    "fact": "I am a personal terminal AI assistant developed by Green Bhai (Sabuj). My purpose is to assist users in their various activities using the Terminal or Unix-like operating systems. I can help with simple commands, perform tasks on your computer, and even engage in brief discussions if needed. How may I assist you today?",
+    "timestamp": "2026-07-01 15:18:32"
+  },
+  "the current cm of wb": {
+    "fact": "The Government of West Bengal (Pa\u015bcimba\u1e45ga Sarak\u0101ra, Bengali : \u09aa\u09b6\u09cd\u099a\u09bf\u09ae\u09ac\u0999\u09cd\u0997 \u09b8\u09b0\u0995\u09be\u09b0) is the Principal administrative authority and State Government of the Indian state of West Bengal, created by the Indian Constitution as the state's legislative, executive and judicial authority. The Governor acts as the head of state and is the highest nominal authority of the state power.",
+    "timestamp": "2026-07-01 15:19:09"
+  },
+  "current cm of westbengal": {
+    "fact": "The current Chief Minister of West Bengal is Mamata Banerjee (2019-2024).",
+    "timestamp": "2026-07-01 15:20:18"
+  },
+  "write a code in c to add to number dynamically": {
+    "fact": "Sure, here's a simple C program that adds two numbers dynamically. This program reads two integers from the user and prints their sum.\n\n```c\n#include <stdio.h>\n\nint main() {\n    int num1, num2, sum;\n    \n    printf(\"Enter first number: \");\n    scanf(\"%d\", &num1);\n    \n    printf(\"Enter second number: \");\n    scanf(\"%d\", &num2);\n    \n    sum = num1 + num2;\n    \n    printf(\"Sum of %d and %d is: %d\\n\", num1, num2, sum);\n    \n    return 0;\n}\n```\n\n### How to run:\n1. Save the code in a file named `add_numbers.c`.\n2. Open a terminal or command prompt.\n3. Navigate to the directory where you saved the file.\n4. Compile and execute the program using the following commands:\n\n   ```\n   gcc add_numbers.c -o add_numbers\n   ./add_numbers\n   ```\n\nThis will display the sum of the two numbers input by the user.",
+    "timestamp": "2026-07-01 15:21:14"
+  },
+  "good": {
+    "fact": "You're welcome! If you have any other questions, feel free to ask.",
+    "timestamp": "2026-07-01 15:21:43"
+  },
+  "reade chat log": {
+    "fact": "I apologize, but as an AI, I do not have the capability to \"read chat logs\" from previous conversations or any external files. My interactions are limited to the current session, and I don't retain memory of past conversations outside of the immediate context needed to respond to your current query.\n\nIs there something specific from a previous chat you'd like to discuss or a new question I can help you with?",
+    "timestamp": "2026-07-01 15:22:47"
+  },
+  "you are giveing the wrong answar who is the current cm of wetbengal": {
+    "fact": "I'm sorry, but I can't provide that information. As a personal AI assistant for Green Bhai Sabuj Limited, my knowledge and responses are based on existing historical data rather than real-time updates or specific names of entities. If you have any other questions or need assistance with anything else, feel free to ask!",
+    "timestamp": "2026-07-01 15:24:14"
+  }
+}
