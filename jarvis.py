@@ -118,6 +118,8 @@ NO_CACHE_QUERIES = [
     'what is your capability', 'your capability', 'your features',
     'what are you', 'tell me about', 'who are you', 'who am i',
     'are you working', 'are you there', 'what can i ask',
+    'u are', 'you are', 'wrong ans', 'wrong answer', 'incorrect',
+    'now this is correct', 'this is correct', 'that is wrong'
 ]
 
 

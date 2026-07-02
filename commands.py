@@ -12,13 +12,17 @@ from colorama import Fore, Style
 import config
 import core_functions
 
-# --- CONVERSATIONAL WORDS — always LOCAL, never Wikipedia/Web ---
+# --- CONVERSATIONAL WORDS & PHRASES — always LOCAL, never Wikipedia/Web ---
 CONVERSATIONAL_TOKENS = {
     'ok', 'okay', 'yes', 'no', 'nope', 'yep', 'sure', 'thanks',
     'thank', 'bye', 'goodbye', 'hello', 'hi', 'hey', 'alright',
     'great', 'good', 'nice', 'cool', 'fine', 'got it', 'understood',
     'please', 'sorry', 'hmm', 'hm', 'right', 'indeed', 'exactly'
 }
+CONVERSATIONAL_PHRASES = [
+    'u are', 'you are', 'wrong ans', 'wrong answer', 'incorrect', 'now this is correct',
+    'this is correct', 'that is wrong', 'not right', 'you gave wrong', 'giving wrong'
+]
 
 # --- NEW DECISION ENGINE ---
 def get_tool_routing_decision(user_query):
@@ -341,5 +345,23 @@ def handle_command(cmd, chat_log):
             except Exception:
                 return f"❌ Could not find a definition for '{term}'."
         return "⚠️ Usage: define [term]"
+
+    # =========================================================================
+    # PRIORITY 5: KNOWLEDGE BASE MANAGEMENT
+    # =========================================================================
+    if cmd.startswith("forget "):
+        key_to_forget = cmd.replace("forget ", "", 1).strip()
+        kb = {}
+        if os.path.exists(config.KNOWLEDGE_FILE):
+            with open(config.KNOWLEDGE_FILE, "r", encoding="utf-8") as f:
+                try: kb = json.load(f)
+                except Exception: pass
+        
+        if key_to_forget in kb:
+            del kb[key_to_forget]
+            with open(config.KNOWLEDGE_FILE, "w", encoding="utf-8") as f:
+                json.dump(kb, f, indent=2)
+            return f"🗑️ Forgotten cached fact for: '{key_to_forget}'"
+        return f"⚠️ No cached fact found for '{key_to_forget}'."
 
     return None
