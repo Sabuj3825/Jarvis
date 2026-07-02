@@ -56,7 +56,7 @@ echo -e "${GREEN}✓ Storage permission requested (accept the popup)${RESET}\n"
 # ────────────────────────────────────────────────────────────
 echo -e "${CYAN}${BOLD}[4/5] Installing Python packages (pip)...${RESET}"
 
-pip install --upgrade pip
+python -m pip install --upgrade pip --break-system-packages 2>/dev/null || true
 
 PYTHON_PKGS=(
     "colorama"        # Terminal color output
