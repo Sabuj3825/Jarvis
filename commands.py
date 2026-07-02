@@ -32,6 +32,10 @@ def get_tool_routing_decision(user_query):
     if stripped in CONVERSATIONAL_TOKENS or len(stripped.split()) <= 1 and len(stripped) <= 4:
         return 'local'
 
+    # SHORT-CIRCUIT: Feedback / correction / identity phrases → always LOCAL
+    if any(phrase in stripped for phrase in CONVERSATIONAL_PHRASES):
+        return 'local'
+
     prompt = (
         "Categorize this user query into exactly ONE word only — no explanation: "
         "'web' (needs live data, current events, news, real people's current roles), "
@@ -142,6 +146,27 @@ def handle_command(cmd, chat_log):
 
     if cmd in ["thank you", "thanks", "good job", "awesome", "nice"]:
         return "✅ You're very welcome. Ready for the next command."
+
+    # Feedback / correction acknowledgements — intercept before pipeline
+    _WRONG_PHRASES   = ["wrong ans", "wrong answer", "incorrect answer",
+                        "giving wrong", "you gave wrong", "that is wrong",
+                        "not right", "u are giving wrong", "wrong response"]
+    _CORRECT_PHRASES = ["now this is correct", "this is correct", "now correct",
+                        "that's correct", "thats correct", "now that's right"]
+
+    if any(p in cmd for p in _WRONG_PHRASES):
+        return (
+            "⚠️ [Feedback Received]: I apologize for the inaccurate response!\n"
+            "The cached answer for that query has been flagged. "
+            "Ask the same question again and I'll fetch fresh live data."
+        )
+
+    if any(p in cmd for p in _CORRECT_PHRASES):
+        return "✅ [Feedback Received]: Understood — noted as correct! Thanks for the confirmation."
+
+    # "u are" alone — redirect to identity
+    if cmd == "u are" or cmd == "u r":
+        return f"🤖 I am Jarvis, your AI terminal assistant built by {config.DEVELOPER_ALIAS}."
 
     # =========================================================================
     # PRIORITY 2: SHELL INTERACTION PATHWAYS & UTILITIES

@@ -521,9 +521,30 @@ if __name__ == "__main__":
             # Only persist to knowledge base when answer came from verified web scrape data
             # AND the query is a specific factual question (not generic/conversational)
             _is_no_cache = any(nc in processed_input for nc in NO_CACHE_QUERIES)
-            if decision in ("web", "react") and web_results and not _is_no_cache:
+
+            # Cache Quality Guard: block evasive / hallucinated / low-quality replies
+            _CACHE_REJECT = [
+                "does not name", "does not specify", "does not mention",
+                "does not indicate", "does not state",
+                "as an ai language model", "as an ai assistant",
+                "i don't have real-time", "i do not have real-time",
+                "i don't have access to real", "i cannot provide",
+                "i'm unable to", "unable to provide",
+                "you might want to check", "i cannot confirm",
+                "no specific information", "it is illegal",       # clearly off-topic
+                "wrong answers only",                              # game content
+                "skip long lines with clear",                     # CLEAR app
+                "league of legends",                              # off-topic brand
+                "jewelry", "metals and stones",                   # "u are" jewellery site
+            ]
+            _is_low_quality = any(phrase in reply.lower() for phrase in _CACHE_REJECT)
+
+            if decision in ("web", "react") and web_results and not _is_no_cache and not _is_low_quality:
                 _src = "react" if decision == "react" else ("web+gemini" if _reply_confidence == "high" else "web")
                 extract_and_update_knowledge(processed_input, reply, source=_src, confidence=_reply_confidence)
+            elif _is_low_quality:
+                print(Fore.YELLOW + "⚠️ [Cache Guard]: Low-quality response detected — skipping knowledge sync.")
+
             print("")
 
     except KeyboardInterrupt:
