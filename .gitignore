@@ -15,3 +15,6 @@ env/
 
 # MacOS
 .DS_Store
+
+# Local planning notes (never push to git)
+ROADMAP.md

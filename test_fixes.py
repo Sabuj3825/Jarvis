@@ -358,8 +358,8 @@ header("BUG 12 — Knowledge sync only saves web-verified answers")
 with open("jarvis.py", "r", encoding="utf-8") as f:
     jarvis_src = f.read()
 
-test("Knowledge sync guarded by 'decision == web and web_results'",
-     "if decision == 'web' and web_results and not _is_no_cache:" in jarvis_src,
+test("Knowledge sync guarded by 'decision in web/react and web_results'",
+     "if decision in" in jarvis_src and "web_results and not _is_no_cache:" in jarvis_src,
      "Hallucinated local/empty answers are NOT persisted")
 
 test("No-cache blocklist prevents conversational queries from being cached",

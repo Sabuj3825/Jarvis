@@ -48,7 +48,7 @@ def get_tool_routing_decision(user_query):
             if keyword in raw:
                 return keyword
         return 'web'  # Default fallback if no keyword matched
-    except:
+    except Exception:
         return 'web'  # Default fallback
 
 def load_tasks():
@@ -103,7 +103,7 @@ def handle_command(cmd, chat_log):
     if any(phrase in cmd for phrase in assignment_phrases):
         return None
 
-    if any(x in cmd for x in ["who are you", "who ami i", "your name", "wht is your name", "whz is your name"]):
+    if any(x in cmd for x in ["who are you", "your name", "wht is your name", "whz is your name"]):
         return "🤖 I am Jarvis. From executing local shell commands to scraping dynamic networks, I am here to make your computer tasks smooth and efficient."
 
     if any(x in cmd for x in ["tell me about yourself", "tell me about u", "tell me about your self"]):

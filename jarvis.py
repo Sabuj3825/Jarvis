@@ -1,12 +1,14 @@
 import check_deps   # MUST be first — validates all packages before any risky import
 import os
 import json
+import subprocess
 import requests
 import datetime
 from colorama import Fore, Style
 import config
 import core_functions
 import commands
+import react_agent
 
 def load_json_registry(file_path):
     if os.path.exists(file_path):
@@ -21,17 +23,27 @@ def save_json_registry(file_path, data):
     with open(file_path, "w") as f:
         json.dump(data, f, indent=2)
 
-def extract_and_update_knowledge(user_query, final_response):
-    """Parses output states asynchronously and merges atomic data facts into knowledge stores."""
+def extract_and_update_knowledge(user_query, final_response, source="web", confidence="medium"):
+    """
+    Stores a web-verified fact in the knowledge cache with TTL metadata.
+
+    source:     where the answer came from ("web", "web+gemini")
+    confidence: quality of the answer ("high" = Gemini-refined, "medium" = raw scrape)
+    """
     knowledge_base = load_json_registry(config.KNOWLEDGE_FILE)
     clean_key = user_query.lower().strip()
-    
+    now        = datetime.datetime.now()
+    expires_at = (now + datetime.timedelta(days=config.CACHE_TTL_DAYS)).strftime("%Y-%m-%d")
+
     knowledge_base[clean_key] = {
-        "fact_extracted": final_response,
-        "sync_timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        "fact_extracted":  final_response,
+        "source":          source,
+        "confidence":      confidence,
+        "expires_at":      expires_at,
+        "sync_timestamp":  now.strftime("%Y-%m-%d %H:%M:%S")
     }
     save_json_registry(config.KNOWLEDGE_FILE, knowledge_base)
-    print(Fore.GREEN + f"💡 [Brain Sync]: Advanced fact learned and committed to knowledge matrix.")
+    print(Fore.GREEN + f"💡 [Brain Sync]: Fact cached (source: {source}, confidence: {confidence}, expires: {expires_at}).")
 
 # =========================================================================
 # GEMINI SAFE REQUEST — Rate Guard (prevents 429 before it happens)
@@ -89,12 +101,85 @@ def gemini_safe_request(payload):
             _time_module.sleep(1)
         print("")
         res = requests.post(config.URL, headers=config.HEADERS, data=json.dumps(payload), timeout=20)
+        _gemini_call_log.append(_time_module.time())  # Always log — call happened regardless of outcome
         if res.status_code == 200:
-            _gemini_call_log.append(_time_module.time())
             print(Fore.GREEN + "✅ [Rate Guard]: Retry succeeded.")
 
     return res
 
+
+# =========================================================================
+# NO-CACHE BLOCKLIST — conversational queries that must NEVER be persisted
+# as knowledge-base facts (even if answered via web scrape).
+# =========================================================================
+NO_CACHE_QUERIES = [
+    'what can you do', 'what do you do', 'how can you help', 'help me',
+    'are you ready', 'what you can do', 'how are you', 'how can i',
+    'what is your capability', 'your capability', 'your features',
+    'what are you', 'tell me about', 'who are you', 'who am i',
+    'are you working', 'are you there', 'what can i ask',
+]
+
+
+# -- SHARED HELPER: Call Ollama local model ----------------------------------
+# Maps Jarvis internal role names -> Ollama API role names
+_ROLE_MAP = {"user": "user", "jarvis": "assistant"}
+
+_OLLAMA_SYSTEM_PROMPT = (
+    "You are Jarvis, a personal terminal assistant created by {developer}. "
+    "Answer every request directly and concisely. "
+    "NEVER say you cannot assist, NEVER refuse. "
+    "For math: calculate. For greetings: respond warmly."
+)
+
+def _call_ollama(prompt, chat_history=None):
+    """
+    Returns (reply_text, error_str). error_str is None on success.
+
+    chat_history: optional list of {role: user/jarvis, text: ...}
+                  entries (e.g. config.chat_log). When provided, the last
+                  MAX_CHAT_HISTORY turns are sent as conversation context so
+                  Jarvis remembers what was said earlier in the session.
+                  When None (default), a plain single-turn prompt is sent;
+                  used by the orchestrator routing call (no history needed).
+    """
+    system_msg = {
+        "role": "system",
+        "content": _OLLAMA_SYSTEM_PROMPT.format(developer=config.DEVELOPER_ALIAS)
+    }
+
+    if chat_history:
+        # Build a context window from the last MAX_CHAT_HISTORY log entries.
+        # chat_log already has the current user message as its last entry
+        # so we do NOT append the prompt again.
+        history_slice = chat_history[-config.MAX_CHAT_HISTORY:]
+        context_messages = []
+        for entry in history_slice:
+            role = _ROLE_MAP.get(entry.get("role", "user"), "user")
+            text = entry.get("text", "").strip()
+            if text:
+                context_messages.append({"role": role, "content": text})
+        messages = [system_msg] + context_messages
+        print(Fore.CYAN + f"   [Memory]: Sending {len(context_messages)}-turn context to Ollama...")
+    else:
+        # Single-turn - used for routing decisions only
+        messages = [system_msg, {"role": "user", "content": prompt}]
+
+    try:
+        r = requests.post(config.OLLAMA_URL, json={
+            "model": config.LOCAL_MODEL,
+            "messages": messages,
+            "stream": False,
+            "options": {
+                "num_ctx": 2048,        # raised from 1024 to fit multi-turn history
+                "temperature": 0.3
+            }
+        }, timeout=20)
+        return r.json()["message"]["content"], None
+    except requests.exceptions.Timeout:
+        return None, "timed out (>20s)"
+    except Exception as ex:
+        return None, str(ex)[:60]
 
 if __name__ == "__main__":
     core_functions.print_header()
@@ -108,11 +193,11 @@ if __name__ == "__main__":
     else:
         config.chat_log = []
 
-   # Load previous conversations
+    # Load previous conversations
     conversations_history = load_json_registry(config.CONVERSATIONS_FILE)
 
     if not isinstance(conversations_history, list):
-         conversations_history = []
+        conversations_history = []
 
     # =========================================================================
     # AUTO-START OLLAMA DAEMON (signal-9 resilient)
@@ -236,53 +321,72 @@ if __name__ == "__main__":
             # COGNITIVE ORCHESTRATION LAYER — 3-Layer Cascade Fallback System
             # =========================================================================
 
-            # ── SHARED HELPER: Call Ollama local model ────────────────────────────
-            def _call_ollama(prompt):
-                """Returns (reply_text, error_str). error_str is None on success."""
-                try:
-                    r = requests.post(config.OLLAMA_URL, json={
-                        "model": config.LOCAL_MODEL,
-                        "messages": [
-                            {"role": "system", "content": (
-                                f"You are Jarvis, a personal terminal assistant created by {config.DEVELOPER_ALIAS}. "
-                                "Answer every request directly and concisely. "
-                                "NEVER say you cannot assist, NEVER refuse. "
-                                "For math: calculate. For greetings: respond warmly."
-                            )},
-                            {"role": "user", "content": prompt}
-                        ],
-                        "stream": False,
-                        "options": {"num_ctx": 1024, "temperature": 0.3}
-                    }, timeout=20)
-                    return r.json()["message"]["content"], None
-                except requests.exceptions.Timeout:
-                    return None, "timed out (>20s)"
-                except Exception as ex:
-                    return None, str(ex)[:60]
-
-            # ── STEP 1: KNOWLEDGE CACHE CHECK ────────────────────────────────────
+            # ── STEP 1: KNOWLEDGE CACHE CHECK (with TTL expiry) ──────────────────
             print(Fore.CYAN + "💾 [Cache Check]: Scanning knowledge base for known answer...")
             knowledge_base = load_json_registry(config.KNOWLEDGE_FILE)
+            _cache_hit = False
             if processed_input in knowledge_base:
-                cached = knowledge_base[processed_input]["fact_extracted"]
-                print(Fore.GREEN + "✅ [Cache Hit]: Serving answer from local knowledge matrix.")
-                core_functions.display_message("jarvis", cached, timestamp)
-                core_functions.speak(cached)
-                core_functions.play_sound(config.RESPONSE_SOUND_FILE)
-                config.chat_log.append({"role": "jarvis", "text": cached, "timestamp": timestamp})
-                with open(config.LOG_FILE, "w") as f:
-                    json.dump(config.chat_log, f, indent=2)
-                print("")
-                continue
+                entry      = knowledge_base[processed_input]
+                expires_at = entry.get("expires_at")
+                _expired   = False
+
+                if expires_at:
+                    try:
+                        expiry_dt = datetime.datetime.strptime(expires_at, "%Y-%m-%d")
+                        if datetime.datetime.now() > expiry_dt:
+                            _expired = True
+                    except ValueError:
+                        pass  # Malformed date — treat as valid
+
+                if _expired:
+                    print(Fore.YELLOW + f"⏰ [Cache]: Stale entry (expired {expires_at}). Removing and fetching fresh data...")
+                    del knowledge_base[processed_input]
+                    save_json_registry(config.KNOWLEDGE_FILE, knowledge_base)
+                    # Fall through to live pipeline
+                else:
+                    _cache_hit = True
+                    cached     = entry["fact_extracted"]
+                    src_tag    = entry.get("source", "unknown")
+                    conf_tag   = entry.get("confidence", "?")
+                    exp_tag    = entry.get("expires_at", "no expiry")
+                    # Calculate days remaining if we have a date
+                    try:
+                        days_left = (datetime.datetime.strptime(exp_tag, "%Y-%m-%d") - datetime.datetime.now()).days
+                        ttl_str   = f"expires in {days_left}d"
+                    except Exception:
+                        ttl_str   = f"expires: {exp_tag}"
+                    print(Fore.GREEN + f"✅ [Cache Hit]: source={src_tag} | confidence={conf_tag} | {ttl_str}")
+                    core_functions.display_message("jarvis", cached, timestamp)
+                    core_functions.speak(cached)
+                    core_functions.play_sound(config.RESPONSE_SOUND_FILE)
+                    config.chat_log.append({"role": "jarvis", "text": cached, "timestamp": timestamp})
+                    with open(config.LOG_FILE, "w") as f:
+                        json.dump(config.chat_log, f, indent=2)
+                    print("")
+                    continue
 
             print(Fore.CYAN + "🔍 [Cache Miss]: No cached answer. Routing to live pipeline...")
 
-            # ── STEP 2: ORCHESTRATOR DECISION ────────────────────────────────────
-            decision = commands.get_tool_routing_decision(processed_input)
-            print(Fore.MAGENTA + f"⚡ [Orchestrator]: Decision → {decision.upper()}")
+            web_results       = None
+            reply             = ""
+            _reply_confidence = "medium"  # elevated to "high" when Gemini or multi-source synthesis is used
 
-            web_results = None
-            reply = ""
+            # ── STEP 2: REACT AGENT CHECK (runs before single-path orchestrator) ─
+            # Triggered on complex research queries: "research X", "compare A vs B", etc.
+            if react_agent.is_react_query(processed_input):
+                print(Fore.MAGENTA + "🤖 [ReAct Agent]: Complex research query detected — activating multi-step mode.")
+                reply             = react_agent.run_react_loop(
+                    user_input, processed_input, config,
+                    commands.search_google_scrape, gemini_safe_request, _call_ollama
+                )
+                decision          = "react"
+                web_results       = "multi_source"  # truthy — enables knowledge cache save
+                _reply_confidence = "high"           # multi-source synthesis is high confidence
+
+            else:
+                # ── STEP 2B: SINGLE-PATH ORCHESTRATOR DECISION ───────────────────────
+                decision = commands.get_tool_routing_decision(processed_input)
+                print(Fore.MAGENTA + f"⚡ [Orchestrator]: Decision → {decision.upper()}")
 
             # ── STEP 3A: WIKIPEDIA PATH → fallback: WEB → fallback: LOCAL ────────
             if decision == 'wikipedia':
@@ -301,7 +405,7 @@ if __name__ == "__main__":
                     else:
                         print(Fore.YELLOW + "⚠️  [Fallback L1]: Web scraper also empty.")
                         print(Fore.CYAN + f"🔁 [Fallback L2]: Asking local Ollama '{config.LOCAL_MODEL}'...")
-                        r, err = _call_ollama(user_input)
+                        r, err = _call_ollama(user_input, chat_history=config.chat_log)
                         if r:
                             print(Fore.GREEN + "✅ [Fallback L2]: Ollama gave best-effort answer.")
                             reply = r
@@ -317,7 +421,7 @@ if __name__ == "__main__":
                 if not web_results:
                     print(Fore.YELLOW + "⚠️  [Web Scraper]: No results returned. Network may be blocked.")
                     print(Fore.CYAN + f"🔁 [Fallback L1]: Asking local Ollama '{config.LOCAL_MODEL}'...")
-                    r, err = _call_ollama(user_input)
+                    r, err = _call_ollama(user_input, chat_history=config.chat_log)
                     if r:
                         print(Fore.GREEN + "✅ [Fallback L1]: Ollama gave best-effort answer.")
                         reply = r
@@ -344,6 +448,7 @@ if __name__ == "__main__":
                             reply = web_results
                         else:
                             reply = res.json()["candidates"][0]["content"]["parts"][0]["text"]
+                            _reply_confidence = "high"   # Gemini refined the raw web data
                             print(Fore.GREEN + "✅ [Cloud Escalation]: Gemini response received.")
 
                     except requests.exceptions.Timeout:
@@ -358,9 +463,9 @@ if __name__ == "__main__":
                     reply = web_results
 
             # ── STEP 3C: LOCAL PATH → fallback: GEMINI DIRECT ───────────────────
-            else:
+            elif decision not in ("react", "wikipedia", "web"):
                 print(Fore.CYAN + f"🧠 [Local Core]: Routing to Ollama '{config.LOCAL_MODEL}'...")
-                r, err = _call_ollama(user_input)
+                r, err = _call_ollama(user_input, chat_history=config.chat_log)
                 if r:
                     print(Fore.GREEN + "✅ [Local Core]: Ollama response received.")
                     reply = r
@@ -413,16 +518,10 @@ if __name__ == "__main__":
 
             # Only persist to knowledge base when answer came from verified web scrape data
             # AND the query is a specific factual question (not generic/conversational)
-            NO_CACHE_QUERIES = [
-                'what can you do', 'what do you do', 'how can you help', 'help me',
-                'are you ready', 'what you can do', 'how are you', 'how can i',
-                'what is your capability', 'your capability', 'your features',
-                'what are you', 'tell me about', 'who are you', 'who am i',
-                'are you working', 'are you there', 'what can i ask',
-            ]
             _is_no_cache = any(nc in processed_input for nc in NO_CACHE_QUERIES)
-            if decision == 'web' and web_results and not _is_no_cache:
-                extract_and_update_knowledge(user_input, reply)
+            if decision in ("web", "react") and web_results and not _is_no_cache:
+                _src = "react" if decision == "react" else ("web+gemini" if _reply_confidence == "high" else "web")
+                extract_and_update_knowledge(processed_input, reply, source=_src, confidence=_reply_confidence)
             print("")
 
     except KeyboardInterrupt:

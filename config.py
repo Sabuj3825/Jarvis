@@ -1,5 +1,7 @@
 import os
 
+_BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
 # --- DEVELOPER BRANDING OVERRIDES ---
 DEVELOPER_NAME = "Sabuj De"
 DEVELOPER_ALIAS = "Green Bhai"
@@ -8,15 +10,16 @@ GITHUB_PROFILE = "https://github.com/Sabuj3825"
 TELEGRAM_CHANNEL = "https://t.me/GreenBhaiOfficial"
 
 # --- PERSISTENT DUAL-LAYER STORAGE BASES ---
-CONVERSATIONS_FILE = "conversations.json"
-KNOWLEDGE_FILE = "knowledge.json"
-TODO_FILE = "todo_list.json"
-LOG_FILE = "chat_log.json"
+CONVERSATIONS_FILE = os.path.join(_BASE_DIR, "conversations.json")
+KNOWLEDGE_FILE     = os.path.join(_BASE_DIR, "knowledge.json")
+TODO_FILE          = os.path.join(_BASE_DIR, "todo_list.json")
+LOG_FILE           = os.path.join(_BASE_DIR, "chat_log.json")
 
 # --- HARDWARE & LOCAL TUNING PROPERTIES ---
 LOCAL_MODEL = "qwen2.5:0.5b"
 OLLAMA_URL = "http://127.0.0.1:11434/api/chat"
 MAX_CHAT_HISTORY = 6  # Context slider depth boundary
+CACHE_TTL_DAYS  = 30   # Web-verified facts expire after 30 days
 
 # --- CLOUD ESCALATION PARAMETERS ---
 API_KEY = os.environ.get("GEMINI_API_KEY", "YOUR_GEMINI_API_KEY_HERE")
