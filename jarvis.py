@@ -301,17 +301,37 @@ if __name__ == "__main__":
                 if core_functions.current_music_process:
                     core_functions.current_music_process.terminate()
                 break
+######################################################starts here
+# =========================================================================
+            # 1. PRIORITY GATE & CACHE WIPE FEEDBACK LOOP
+            # =========================================================================
+            if processed_input in ["wrong", "wrong answer", "this is wrong", "incorrect", "wrong ans"]:
+                # Grab the PREVIOUS query the user asked to delete it from the cache
+                user_messages = [msg["text"] for msg in config.chat_log if msg["role"] == "user"]
+                if len(user_messages) >= 1:
+                    # -1 because we haven't appended the current "wrong" input to the log yet
+                    previous_query = user_messages[-1].lower().strip()
+                    knowledge_base = load_json_registry(config.KNOWLEDGE_FILE)
+                    if previous_query in knowledge_base:
+                        del knowledge_base[previous_query]
+                        save_json_registry(config.KNOWLEDGE_FILE, knowledge_base)
+                
+                reply = "⚠️ [Feedback Received]: I apologize for the inaccurate response! The cached answer for your previous query has been wiped. Ask again and I will fetch fresh data."
+                core_functions.display_message("jarvis", reply, timestamp)
+                core_functions.speak("Cache wiped.")
+                config.chat_log.append({"role": "jarvis", "text": reply, "timestamp": timestamp})
+                with open(config.LOG_FILE, "w") as f:
+                    json.dump(config.chat_log, f, indent=2)
+                continue
 
+            # Append current input to log AFTER the feedback gate check
             config.chat_log.append({"role": "user", "text": user_input, "timestamp": timestamp})
 
             # Check hardcoded priority automation triggers first
             command_response = commands.handle_command(processed_input, config.chat_log)
             if command_response:
                 config.chat_log.append({"role": "jarvis", "text": command_response, "timestamp": timestamp})
-                
-                # --- FIXED: Corrected variable name from 'command_command_response' to 'command_response' ---
                 core_functions.display_message("jarvis", command_response, timestamp)
-                
                 core_functions.speak(command_response)
                 core_functions.play_sound(config.RESPONSE_SOUND_FILE)
                 
@@ -374,7 +394,6 @@ if __name__ == "__main__":
             _reply_confidence = "medium"  # elevated to "high" when Gemini or multi-source synthesis is used
 
             # ── STEP 2: REACT AGENT CHECK (runs before single-path orchestrator) ─
-            # Triggered on complex research queries: "research X", "compare A vs B", etc.
             if react_agent.is_react_query(processed_input):
                 print(Fore.MAGENTA + "🤖 [ReAct Agent]: Complex research query detected — activating multi-step mode.")
                 reply             = react_agent.run_react_loop(
@@ -387,11 +406,20 @@ if __name__ == "__main__":
 
             else:
                 # ── STEP 2B: SINGLE-PATH ORCHESTRATOR DECISION ───────────────────────
-                decision = commands.get_tool_routing_decision(processed_input)
+                decision = commands.get_tool_routing_decision(processed_input).lower()
                 print(Fore.MAGENTA + f"⚡ [Orchestrator]: Decision → {decision.upper()}")
 
-            # ── STEP 3A: WIKIPEDIA PATH → fallback: WEB → fallback: LOCAL ────────
-            if decision == 'wikipedia':
+            # ── STEP 3A: CONVERSATION PATH (Bypasses all heavy scrapers) ──────────
+            if decision == 'conversation':
+                print(Fore.CYAN + f"🧠 [Local Core]: Handling casual conversation...")
+                r, err = _call_ollama(user_input, chat_history=config.chat_log)
+                if r:
+                    reply = r
+                else:
+                    reply = "I'm here. How can I assist you?"
+
+            # ── STEP 3B: WIKIPEDIA PATH → fallback: WEB → fallback: LOCAL ────────
+            elif decision == 'wikipedia':
                 import wikipedia
                 print(Fore.CYAN + "📖 [Wikipedia]: Fetching encyclopedic entry...")
                 try:
@@ -415,10 +443,16 @@ if __name__ == "__main__":
                             print(Fore.RED + f"❌ [Fallback L2]: Ollama also failed — {err}")
                             reply = "❌ All pipeline routes failed. Wikipedia, Web scraper, and Local core are all unavailable."
 
-            # ── STEP 3B: WEB PATH → fallback: LOCAL → fallback: GEMINI DIRECT ────
+            # ── STEP 3C: WEB PATH → fallback: LOCAL → fallback: GEMINI DIRECT ────
             elif decision == 'web':
                 print(Fore.CYAN + "🌐 [Web Scraper]: Searching live network data...")
-                web_results = commands.search_google_scrape(processed_input)
+                
+                # Strip out query noise before crawling
+                search_query = processed_input
+                for filler in ["search it on google and the answar", "search it on google", "tell me", "ask google", "and the answer"]:
+                    search_query = search_query.replace(filler, "")
+                    
+                web_results = commands.search_google_scrape(search_query.strip())
 
                 if not web_results:
                     print(Fore.YELLOW + "⚠️  [Web Scraper]: No results returned. Network may be blocked.")
@@ -464,8 +498,8 @@ if __name__ == "__main__":
                     print(Fore.YELLOW + "💡 [Cloud Escalation]: No Gemini key. Serving raw web data directly.")
                     reply = web_results
 
-            # ── STEP 3C: LOCAL PATH → fallback: GEMINI DIRECT ───────────────────
-            elif decision not in ("react", "wikipedia", "web"):
+            # ── STEP 3D: LOCAL PATH → fallback: GEMINI DIRECT ───────────────────
+            elif decision not in ("react", "wikipedia", "web", "conversation"):
                 print(Fore.CYAN + f"🧠 [Local Core]: Routing to Ollama '{config.LOCAL_MODEL}'...")
                 r, err = _call_ollama(user_input, chat_history=config.chat_log)
                 if r:
@@ -495,11 +529,6 @@ if __name__ == "__main__":
                             reply = "❌ All pipeline routes exhausted. No response available."
                     else:
                         reply = "❌ Local core offline. No Gemini key set. Run: ollama serve"
-
-            # NOTE: Ollama formatter removed — qwen2.5:0.5b was hallucinating factual content.
-
-
-
 
             # =========================================================================
             # CORE OUTPUT DISPLAY & WRITING INTERFACES
@@ -532,7 +561,7 @@ if __name__ == "__main__":
                 "i'm unable to", "unable to provide",
                 "you might want to check", "i cannot confirm",
                 "no specific information", "it is illegal",       # clearly off-topic
-                "wrong answers only",                              # game content
+                "wrong answers only",                             # game content
                 "skip long lines with clear",                     # CLEAR app
                 "league of legends",                              # off-topic brand
                 "jewelry", "metals and stones",                   # "u are" jewellery site
@@ -546,6 +575,253 @@ if __name__ == "__main__":
                 print(Fore.YELLOW + "⚠️ [Cache Guard]: Low-quality response detected — skipping knowledge sync.")
 
             print("")
+            # config.chat_log.append({"role": "user", "text": user_input, "timestamp": timestamp})
+
+            # # Check hardcoded priority automation triggers first
+            # command_response = commands.handle_command(processed_input, config.chat_log)
+            # if command_response:
+            #     config.chat_log.append({"role": "jarvis", "text": command_response, "timestamp": timestamp})
+                
+            #     # --- FIXED: Corrected variable name from 'command_command_response' to 'command_response' ---
+            #     core_functions.display_message("jarvis", command_response, timestamp)
+                
+            #     core_functions.speak(command_response)
+            #     core_functions.play_sound(config.RESPONSE_SOUND_FILE)
+                
+            #     with open(config.LOG_FILE, "w") as f:
+            #         json.dump(config.chat_log, f, indent=2)
+            #     continue
+            
+            # # =========================================================================
+            # # COGNITIVE ORCHESTRATION LAYER — 3-Layer Cascade Fallback System
+            # # =========================================================================
+
+            # # ── STEP 1: KNOWLEDGE CACHE CHECK (with TTL expiry) ──────────────────
+            # print(Fore.CYAN + "💾 [Cache Check]: Scanning knowledge base for known answer...")
+            # knowledge_base = load_json_registry(config.KNOWLEDGE_FILE)
+            # _cache_hit = False
+            # if processed_input in knowledge_base:
+            #     entry      = knowledge_base[processed_input]
+            #     expires_at = entry.get("expires_at")
+            #     _expired   = False
+
+            #     if expires_at:
+            #         try:
+            #             expiry_dt = datetime.datetime.strptime(expires_at, "%Y-%m-%d")
+            #             if datetime.datetime.now() > expiry_dt:
+            #                 _expired = True
+            #         except ValueError:
+            #             pass  # Malformed date — treat as valid
+
+            #     if _expired:
+            #         print(Fore.YELLOW + f"⏰ [Cache]: Stale entry (expired {expires_at}). Removing and fetching fresh data...")
+            #         del knowledge_base[processed_input]
+            #         save_json_registry(config.KNOWLEDGE_FILE, knowledge_base)
+            #         # Fall through to live pipeline
+            #     else:
+            #         _cache_hit = True
+            #         cached     = entry["fact_extracted"]
+            #         src_tag    = entry.get("source", "unknown")
+            #         conf_tag   = entry.get("confidence", "?")
+            #         exp_tag    = entry.get("expires_at", "no expiry")
+            #         # Calculate days remaining if we have a date
+            #         try:
+            #             days_left = (datetime.datetime.strptime(exp_tag, "%Y-%m-%d") - datetime.datetime.now()).days
+            #             ttl_str   = f"expires in {days_left}d"
+            #         except Exception:
+            #             ttl_str   = f"expires: {exp_tag}"
+            #         print(Fore.GREEN + f"✅ [Cache Hit]: source={src_tag} | confidence={conf_tag} | {ttl_str}")
+            #         core_functions.display_message("jarvis", cached, timestamp)
+            #         core_functions.speak(cached)
+            #         core_functions.play_sound(config.RESPONSE_SOUND_FILE)
+            #         config.chat_log.append({"role": "jarvis", "text": cached, "timestamp": timestamp})
+            #         with open(config.LOG_FILE, "w") as f:
+            #             json.dump(config.chat_log, f, indent=2)
+            #         print("")
+            #         continue
+
+            # print(Fore.CYAN + "🔍 [Cache Miss]: No cached answer. Routing to live pipeline...")
+
+            # web_results       = None
+            # reply             = ""
+            # _reply_confidence = "medium"  # elevated to "high" when Gemini or multi-source synthesis is used
+
+            # # ── STEP 2: REACT AGENT CHECK (runs before single-path orchestrator) ─
+            # # Triggered on complex research queries: "research X", "compare A vs B", etc.
+            # if react_agent.is_react_query(processed_input):
+            #     print(Fore.MAGENTA + "🤖 [ReAct Agent]: Complex research query detected — activating multi-step mode.")
+            #     reply             = react_agent.run_react_loop(
+            #         user_input, processed_input, config,
+            #         commands.search_google_scrape, gemini_safe_request, _call_ollama
+            #     )
+            #     decision          = "react"
+            #     web_results       = "multi_source"  # truthy — enables knowledge cache save
+            #     _reply_confidence = "high"           # multi-source synthesis is high confidence
+
+            # else:
+            #     # ── STEP 2B: SINGLE-PATH ORCHESTRATOR DECISION ───────────────────────
+            #     decision = commands.get_tool_routing_decision(processed_input)
+            #     print(Fore.MAGENTA + f"⚡ [Orchestrator]: Decision → {decision.upper()}")
+
+            # # ── STEP 3A: WIKIPEDIA PATH → fallback: WEB → fallback: LOCAL ────────
+            # if decision == 'wikipedia':
+            #     import wikipedia
+            #     print(Fore.CYAN + "📖 [Wikipedia]: Fetching encyclopedic entry...")
+            #     try:
+            #         reply = wikipedia.summary(user_input, sentences=2, auto_suggest=True)
+            #         print(Fore.GREEN + "✅ [Wikipedia]: Entry retrieved successfully.")
+            #     except Exception as e:
+            #         print(Fore.YELLOW + f"⚠️  [Wikipedia]: Failed — {str(e)[:60]}")
+            #         print(Fore.CYAN + "🔁 [Fallback L1]: Trying web scraper instead...")
+            #         web_results = commands.search_google_scrape(processed_input)
+            #         if web_results:
+            #             print(Fore.GREEN + "✅ [Fallback L1]: Web scraper returned data.")
+            #             reply = web_results
+            #         else:
+            #             print(Fore.YELLOW + "⚠️  [Fallback L1]: Web scraper also empty.")
+            #             print(Fore.CYAN + f"🔁 [Fallback L2]: Asking local Ollama '{config.LOCAL_MODEL}'...")
+            #             r, err = _call_ollama(user_input, chat_history=config.chat_log)
+            #             if r:
+            #                 print(Fore.GREEN + "✅ [Fallback L2]: Ollama gave best-effort answer.")
+            #                 reply = r
+            #             else:
+            #                 print(Fore.RED + f"❌ [Fallback L2]: Ollama also failed — {err}")
+            #                 reply = "❌ All pipeline routes failed. Wikipedia, Web scraper, and Local core are all unavailable."
+
+            # # ── STEP 3B: WEB PATH → fallback: LOCAL → fallback: GEMINI DIRECT ────
+            # elif decision == 'web':
+            #     print(Fore.CYAN + "🌐 [Web Scraper]: Searching live network data...")
+            #     web_results = commands.search_google_scrape(processed_input)
+
+            #     if not web_results:
+            #         print(Fore.YELLOW + "⚠️  [Web Scraper]: No results returned. Network may be blocked.")
+            #         print(Fore.CYAN + f"🔁 [Fallback L1]: Asking local Ollama '{config.LOCAL_MODEL}'...")
+            #         r, err = _call_ollama(user_input, chat_history=config.chat_log)
+            #         if r:
+            #             print(Fore.GREEN + "✅ [Fallback L1]: Ollama gave best-effort answer.")
+            #             reply = r
+            #         else:
+            #             print(Fore.RED + f"⚠️  [Fallback L1]: Ollama also failed — {err}")
+            #             reply = "❌ Web scraper returned nothing and local core is offline."
+
+            #     elif config.API_KEY and "YOUR_GEMINI" not in config.API_KEY:
+            #         print(Fore.GREEN + "✅ [Web Scraper]: Live data captured.")
+            #         print(Fore.CYAN + "📡 [Cloud Escalation]: Connecting to Gemini API matrix...")
+            #         try:
+            #             payload = {"contents": [{"role": "user", "parts": [{"text":
+            #                 f"You are Jarvis, a terminal assistant created by {config.DEVELOPER_ALIAS}. "
+            #                 f"Answer ONLY using the following scraped web data. Do NOT add extra info.\n\n"
+            #                 f"Scraped Data: {web_results}\n\nQuery: {user_input}"
+            #             }]}]}
+            #             res = gemini_safe_request(payload)
+
+            #             if res.status_code == 429:
+            #                 print(Fore.YELLOW + "⚠️  [Cloud Escalation]: Gemini rate limit hit (429). Serving raw web data.")
+            #                 reply = web_results
+            #             elif res.status_code != 200:
+            #                 print(Fore.YELLOW + f"⚠️  [Cloud Escalation]: Gemini error (HTTP {res.status_code}). Serving raw web data.")
+            #                 reply = web_results
+            #             else:
+            #                 reply = res.json()["candidates"][0]["content"]["parts"][0]["text"]
+            #                 _reply_confidence = "high"   # Gemini refined the raw web data
+            #                 print(Fore.GREEN + "✅ [Cloud Escalation]: Gemini response received.")
+
+            #         except requests.exceptions.Timeout:
+            #             print(Fore.YELLOW + "⚠️  [Cloud Escalation]: Gemini timed out (>20s). Serving raw web data.")
+            #             reply = web_results
+            #         except Exception as e:
+            #             print(Fore.YELLOW + f"⚠️  [Cloud Escalation]: Gemini failed — {str(e)[:60]}. Serving raw web data.")
+            #             reply = web_results
+            #     else:
+            #         print(Fore.GREEN + "✅ [Web Scraper]: Live data captured.")
+            #         print(Fore.YELLOW + "💡 [Cloud Escalation]: No Gemini key. Serving raw web data directly.")
+            #         reply = web_results
+
+            # # ── STEP 3C: LOCAL PATH → fallback: GEMINI DIRECT ───────────────────
+            # elif decision not in ("react", "wikipedia", "web"):
+            #     print(Fore.CYAN + f"🧠 [Local Core]: Routing to Ollama '{config.LOCAL_MODEL}'...")
+            #     r, err = _call_ollama(user_input, chat_history=config.chat_log)
+            #     if r:
+            #         print(Fore.GREEN + "✅ [Local Core]: Ollama response received.")
+            #         reply = r
+            #     else:
+            #         print(Fore.RED + f"⚠️  [Local Core]: Ollama failed — {err}")
+            #         if config.API_KEY and "YOUR_GEMINI" not in config.API_KEY:
+            #             print(Fore.CYAN + "🔁 [Fallback L1]: Ollama down. Escalating to Gemini...")
+            #             try:
+            #                 payload = {"contents": [{"role": "user", "parts": [{"text":
+            #                     f"You are Jarvis, a terminal assistant created by {config.DEVELOPER_ALIAS}. "
+            #                     f"Answer concisely: {user_input}"
+            #                 }]}]}
+            #                 res = gemini_safe_request(payload)
+            #                 if res.status_code == 200:
+            #                     reply = res.json()["candidates"][0]["content"]["parts"][0]["text"]
+            #                     print(Fore.GREEN + "✅ [Fallback L1]: Gemini answered as Ollama backup.")
+            #                 elif res.status_code == 429:
+            #                     print(Fore.RED + "⚠️  [Fallback L1]: Gemini rate limit (429). All routes exhausted.")
+            #                     reply = "❌ Local core offline + Gemini rate limited. Try again later."
+            #                 else:
+            #                     print(Fore.RED + f"⚠️  [Fallback L1]: Gemini error (HTTP {res.status_code}). All routes exhausted.")
+            #                     reply = "❌ Local core offline + Gemini unavailable."
+            #             except Exception as e:
+            #                 print(Fore.RED + f"⚠️  [Fallback L1]: Gemini also failed — {str(e)[:60]}")
+            #                 reply = "❌ All pipeline routes exhausted. No response available."
+            #         else:
+            #             reply = "❌ Local core offline. No Gemini key set. Run: ollama serve"
+
+            # # NOTE: Ollama formatter removed — qwen2.5:0.5b was hallucinating factual content.
+
+
+
+
+            # # =========================================================================
+            # # CORE OUTPUT DISPLAY & WRITING INTERFACES
+            # # =========================================================================
+            # config.chat_log.append({"role": "jarvis", "text": reply, "timestamp": timestamp})
+            # core_functions.display_message("jarvis", reply, timestamp)
+            # core_functions.speak(reply)
+            # core_functions.play_sound(config.RESPONSE_SOUND_FILE)
+
+            # # Sync active session transcripts to conversations file
+            # conversations_history.append({"role": "user", "text": user_input, "timestamp": timestamp})
+            # conversations_history.append({"role": "jarvis", "text": reply, "timestamp": timestamp})
+            # save_json_registry(config.CONVERSATIONS_FILE, conversations_history)
+            
+            # with open(config.LOG_FILE, "w") as f:
+            #     json.dump(config.chat_log, f, indent=2)
+            # print(Fore.CYAN + f"📂 Log states written cleanly to '{config.CONVERSATIONS_FILE}' and '{config.LOG_FILE}'.")
+
+            # # Only persist to knowledge base when answer came from verified web scrape data
+            # # AND the query is a specific factual question (not generic/conversational)
+            # _is_no_cache = any(nc in processed_input for nc in NO_CACHE_QUERIES)
+
+            # # Cache Quality Guard: block evasive / hallucinated / low-quality replies
+            # _CACHE_REJECT = [
+            #     "does not name", "does not specify", "does not mention",
+            #     "does not indicate", "does not state",
+            #     "as an ai language model", "as an ai assistant",
+            #     "i don't have real-time", "i do not have real-time",
+            #     "i don't have access to real", "i cannot provide",
+            #     "i'm unable to", "unable to provide",
+            #     "you might want to check", "i cannot confirm",
+            #     "no specific information", "it is illegal",       # clearly off-topic
+            #     "wrong answers only",                              # game content
+            #     "skip long lines with clear",                     # CLEAR app
+            #     "league of legends",                              # off-topic brand
+            #     "jewelry", "metals and stones",                   # "u are" jewellery site
+            # ]
+            # _is_low_quality = any(phrase in reply.lower() for phrase in _CACHE_REJECT)
+
+            # if decision in ("web", "react") and web_results and not _is_no_cache and not _is_low_quality:
+            #     _src = "react" if decision == "react" else ("web+gemini" if _reply_confidence == "high" else "web")
+            #     extract_and_update_knowledge(processed_input, reply, source=_src, confidence=_reply_confidence)
+            # elif _is_low_quality:
+            #     print(Fore.YELLOW + "⚠️ [Cache Guard]: Low-quality response detected — skipping knowledge sync.")
+
+            # print("")
+
+###end herea
+
 
     except KeyboardInterrupt:
         print(Fore.YELLOW + "\nExecution drop signal caught via interface. Safely closing mainframe channels.")
