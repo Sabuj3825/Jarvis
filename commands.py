@@ -109,7 +109,7 @@ def handle_command(cmd, chat_log):
     if any(x in cmd for x in ["tell me about yourself", "tell me about u", "tell me about your self"]):
         return f"🤖 I am Jarvis, a custom personal terminal assistant created by {config.DEVELOPER_ALIAS} to streamline your Unix workflows, access automation layers, and handle local-first processing task tracks."
 
-    if any(x in cmd for x in ["who made you", "who created you", "who is your creator", "developer", "devoloper", "made you"]):
+    if any(x in cmd for x in ["who made you", "who created you", "who is your creator", "creator of you", "developer", "devoloper", "develop you", "devolop you", "made you"]):
         return (
             f"🧠 [System Origin]: I was developed and brought to life by **{config.DEVELOPER_NAME}** (popularly known as **{config.DEVELOPER_ALIAS}**).\n\n"
             f"🚀 Check out his development pipelines here:\n"
@@ -142,6 +142,10 @@ def handle_command(cmd, chat_log):
     # =========================================================================
     # PRIORITY 2: SHELL INTERACTION PATHWAYS & UTILITIES
     # =========================================================================
+    if cmd in ["clear", "cls", "clear screen"]:
+        os.system('cls' if os.name == 'nt' else 'clear')
+        return "🧹 Terminal surface wiped clean."
+
     if "read chat" in cmd or "read log" in cmd or "reade chat log" in cmd:
         if os.path.exists(config.LOG_FILE):
             with open(config.LOG_FILE, "r") as f:
