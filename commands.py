@@ -103,13 +103,13 @@ def handle_command(cmd, chat_log):
     if any(phrase in cmd for phrase in assignment_phrases):
         return None
 
-    if any(x in cmd for x in ["who are you", "your name", "wht is your name", "whz is your name"]):
+    if any(x in cmd for x in ["who are you", "who u", "who you", "your name", "wht is your name", "whz is your name"]):
         return "🤖 I am Jarvis. From executing local shell commands to scraping dynamic networks, I am here to make your computer tasks smooth and efficient."
 
-    if any(x in cmd for x in ["tell me about yourself", "tell me about u", "tell me about your self"]):
+    if any(x in cmd for x in ["tell me about yourself", "tell me about u", "tell me about you", "tell me about your self"]):
         return f"🤖 I am Jarvis, a custom personal terminal assistant created by {config.DEVELOPER_ALIAS} to streamline your Unix workflows, access automation layers, and handle local-first processing task tracks."
 
-    if any(x in cmd for x in ["who made you", "who created you", "who is your creator", "creator of you", "developer", "devoloper", "develop you", "devolop you", "made you"]):
+    if any(x in cmd for x in ["who made you", "who build u", "who built you", "who build you", "who created you", "who is your creator", "creator of you", "developer", "devoloper", "develop you", "devolop you", "made you"]):
         return (
             f"🧠 [System Origin]: I was developed and brought to life by **{config.DEVELOPER_NAME}** (popularly known as **{config.DEVELOPER_ALIAS}**).\n\n"
             f"🚀 Check out his development pipelines here:\n"
