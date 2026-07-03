@@ -9,6 +9,9 @@ import config
 import core_functions
 import commands
 import react_agent
+import threading
+import psutil
+import gc
 
 def load_json_registry(file_path):
     if os.path.exists(file_path):
@@ -183,6 +186,59 @@ def _call_ollama(prompt, chat_history=None):
     except Exception as ex:
         return None, str(ex)[:60]
 
+
+# =====================================================
+# MEMORY DEBUGGER
+# =====================================================
+
+process = psutil.Process(os.getpid())
+
+def print_memory():
+    try:
+        mem = process.memory_info()
+
+        print(
+            Fore.YELLOW +
+            "\n========== MEMORY DEBUG =========="
+        )
+        print(
+            Fore.YELLOW +
+            f"RAM Used : {mem.rss / 1024 / 1024:.2f} MB"
+        )
+        print(
+            Fore.YELLOW +
+            f"Virtual  : {mem.vms / 1024 / 1024:.2f} MB"
+        )
+
+        try:
+            children = process.children(recursive=True)
+            print(
+                Fore.YELLOW +
+                f"Child Processes : {len(children)}"
+            )
+
+            for child in children:
+                try:
+                    print(
+                        Fore.CYAN +
+                        f"  PID {child.pid} -> {child.name()}"
+                    )
+                except Exception:
+                    pass
+
+        except Exception:
+            pass
+
+        print(
+            Fore.YELLOW +
+            "==================================\n"
+        )
+
+    except Exception as e:
+        print(f"Memory Debug Error: {e}")
+
+############################
+
 if __name__ == "__main__":
     core_functions.print_header()
     core_functions.play_sound(config.STARTUP_SOUND_FILE)
@@ -242,12 +298,17 @@ if __name__ == "__main__":
                     # This means Android OOM killer targets Jarvis (less RAM) first, not Ollama.
                     import platform as _platform
                     if _platform.system() == "Linux":
-                        _ollama_daemon = subprocess.Popen(
+                        def start_ollama():
+                            subprocess.Popen(
                             ["setsid", "ollama", "serve"],
                             stdout=subprocess.DEVNULL,
                             stderr=subprocess.DEVNULL,
                             start_new_session=True
-                        )
+                            )
+                        threading.Thread(
+                            target=start_ollama,
+                            daemon=True
+                            ).start()
                     else:  # Windows fallback
                         _ollama_daemon = subprocess.Popen(
                             ["ollama", "serve"],
@@ -255,7 +316,7 @@ if __name__ == "__main__":
                             stderr=subprocess.DEVNULL
                         )
                     # Wait up to 5 seconds for it to come online
-                    for _i in range(5):
+                    for _i in range(15):
                         _time.sleep(1)
                         if _ollama_already_running():
                             print(Fore.GREEN + f"✅ [Ollama Daemon]: Online after {_i+1}s. Local core ready.")
@@ -288,6 +349,7 @@ if __name__ == "__main__":
 
     try:
         while True:
+            print_memory()
             user_input = input(Fore.BLUE + Style.BRIGHT + "🧐 You > ")
             if not user_input or not user_input.strip():
                 continue
@@ -301,7 +363,6 @@ if __name__ == "__main__":
                 if core_functions.current_music_process:
                     core_functions.current_music_process.terminate()
                 break
-######################################################
             # =========================================================================
             # 1. PRIORITY GATE & CACHE WIPE / SUPERVISED LEARNING LOOP
             # =========================================================================
@@ -324,7 +385,6 @@ if __name__ == "__main__":
                         if correction_text.startswith(trigger):
                             correction_text = correction_text[len(trigger):].strip()
                             break
-######################################################################################################################################                    
                     if correction_text:
                         # The user provided the correct fact. Force-inject it into the cache!
                         # extract_and_update_knowledge(previous_query, correction_text, source="user_override", confidence="absolute")
@@ -364,7 +424,6 @@ if __name__ == "__main__":
                         except Exception as e:
                             reply = f"⚠️ [Truth Guard]: Verification failed ({str(e)[:40]}). Cannot validate correction safely."
                             core_functions.speak("Verification error.")
-######################################################################################################################
                     else:
                         # The user just said "wrong". Wipe the cache so we can try again.
                         knowledge_base = load_json_registry(config.KNOWLEDGE_FILE)
@@ -629,7 +688,8 @@ if __name__ == "__main__":
                 extract_and_update_knowledge(processed_input, reply, source=_src, confidence=_reply_confidence)
             elif _is_low_quality:
                 print(Fore.YELLOW + "⚠️ [Cache Guard]: Low-quality response detected — skipping knowledge sync.")
-
+            gc.collect()
+            print(Fore.YELLOW +f"[GC] Freed memory | Objects: {len(gc.get_objects())}")
             print("")
 
 
