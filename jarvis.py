@@ -324,12 +324,47 @@ if __name__ == "__main__":
                         if correction_text.startswith(trigger):
                             correction_text = correction_text[len(trigger):].strip()
                             break
-                    
+######################################################################################################################################                    
                     if correction_text:
                         # The user provided the correct fact. Force-inject it into the cache!
-                        extract_and_update_knowledge(previous_query, correction_text, source="user_override", confidence="absolute")
-                        reply = f"⚠️ [Matrix Updated]: I have corrected my knowledge base. For '{previous_query}', I will now remember: {correction_text}"
-                        core_functions.speak("Knowledge base manually overridden.")
+                        # extract_and_update_knowledge(previous_query, correction_text, source="user_override", confidence="absolute")
+                        # reply = f"⚠️ [Matrix Updated]: I have corrected my knowledge base. For '{previous_query}', I will now remember: {correction_text}"
+                        # core_functions.speak("Knowledge base manually overridden.")
+                        print(Fore.CYAN + "🛡️ [Truth Guard]: Verifying user correction against cognitive matrix...")
+                        
+                        # Ask Gemini to verify the user's claim before saving it
+                        verify_payload = {"contents": [{"role": "user", "parts": [{"text":
+                            f"The user is trying to update my memory with this fact: '{correction_text}'. "
+                            f"Is this factually, logically, and mathematically true? "
+                            f"If it is completely true, output exactly: VERIFIED. "
+                            f"If it is false (like 1+2=4), output exactly: REJECTED - followed by a 1-sentence explanation of why it is wrong."
+                        }]}]}
+                        
+                        try:
+                            # We use your rate-limited Gemini function here!
+                            v_res = gemini_safe_request(verify_payload)
+                            
+                            if v_res.status_code == 200:
+                                verification_result = v_res.json()["candidates"][0]["content"]["parts"][0]["text"].strip()
+                                
+                                if verification_result.startswith("VERIFIED"):
+                                    # The fact is true. Inject it.
+                                    extract_and_update_knowledge(previous_query, correction_text, source="user_verified", confidence="absolute")
+                                    reply = f"✅ [Matrix Updated]: I have verified and corrected my knowledge base. For '{previous_query}', I will now remember: {correction_text}"
+                                    core_functions.speak("Knowledge base updated and verified.")
+                                else:
+                                    # The fact is mathematically or factually false. Reject it.
+                                    reason = verification_result.replace("REJECTED -", "").replace("REJECTED", "").strip()
+                                    reply = f"⛔ [Truth Guard Alert]: I cannot update my matrix with that information. {reason}"
+                                    core_functions.speak("Correction rejected. Factual anomaly detected.")
+                            else:
+                                reply = f"⚠️ [Truth Guard]: Cloud matrix returned HTTP {v_res.status_code}. Cannot validate correction right now."
+                                core_functions.speak("Verification offline.")
+                                
+                        except Exception as e:
+                            reply = f"⚠️ [Truth Guard]: Verification failed ({str(e)[:40]}). Cannot validate correction safely."
+                            core_functions.speak("Verification error.")
+######################################################################################################################
                     else:
                         # The user just said "wrong". Wipe the cache so we can try again.
                         knowledge_base = load_json_registry(config.KNOWLEDGE_FILE)
