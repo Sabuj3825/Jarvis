@@ -191,52 +191,53 @@ def _call_ollama(prompt, chat_history=None):
 # MEMORY DEBUGGER
 # =====================================================
 
-process = psutil.Process(os.getpid())
+#process = psutil.Process(os.getpid())
 
 def print_memory():
     try:
-        mem = process.memory_info()
+        # Read current process memory
+        with open("/proc/self/status") as f:
+            status = f.read()
 
-        print(
-            Fore.YELLOW +
-            "\n========== MEMORY DEBUG =========="
-        )
-        print(
-            Fore.YELLOW +
-            f"RAM Used : {mem.rss / 1024 / 1024:.2f} MB"
-        )
-        print(
-            Fore.YELLOW +
-            f"Virtual  : {mem.vms / 1024 / 1024:.2f} MB"
-        )
+        ram = "Unknown"
+        threads = "Unknown"
 
+        for line in status.splitlines():
+            if line.startswith("VmRSS:"):
+                ram = line.split(":", 1)[1].strip()
+            elif line.startswith("Threads:"):
+                threads = line.split(":", 1)[1].strip()
+
+        # Read available system memory
+        mem_available = "Unknown"
+
+        with open("/proc/meminfo") as f:
+            for line in f:
+                if line.startswith("MemAvailable:"):
+                    mem_available = line.split(":", 1)[1].strip()
+                    break
+
+        # Count child processes
         try:
-            children = process.children(recursive=True)
-            print(
-                Fore.YELLOW +
-                f"Child Processes : {len(children)}"
-            )
+            children = subprocess.check_output(
+                ["pgrep", "-P", str(os.getpid())],
+                text=True
+            ).strip().splitlines()
 
-            for child in children:
-                try:
-                    print(
-                        Fore.CYAN +
-                        f"  PID {child.pid} -> {child.name()}"
-                    )
-                except Exception:
-                    pass
+            child_count = len(children)
 
         except Exception:
-            pass
+            child_count = 0
 
-        print(
-            Fore.YELLOW +
-            "==================================\n"
-        )
+        print(Fore.YELLOW + "\n========== MEMORY DEBUG ==========")
+        print(Fore.YELLOW + f"RAM Used       : {ram}")
+        print(Fore.YELLOW + f"Threads        : {threads}")
+        print(Fore.GREEN  + f"Mem Available  : {mem_available}")
+        print(Fore.YELLOW + f"Child Processes: {child_count}")
+        print(Fore.YELLOW + "==================================\n")
 
     except Exception as e:
         print(f"Memory Debug Error: {e}")
-
 ############################
 
 if __name__ == "__main__":
