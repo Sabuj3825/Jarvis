@@ -10,7 +10,6 @@ import core_functions
 import commands
 import react_agent
 import threading
-import psutil
 import gc
 
 def load_json_registry(file_path):
@@ -190,8 +189,6 @@ def _call_ollama(prompt, chat_history=None):
 # =====================================================
 # MEMORY DEBUGGER
 # =====================================================
-
-#process = psutil.Process(os.getpid())
 
 def print_memory():
     try:
