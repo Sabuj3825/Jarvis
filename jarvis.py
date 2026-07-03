@@ -189,11 +189,12 @@ def _call_ollama(prompt, chat_history=None):
 # =====================================================
 # MEMORY DEBUGGER
 # =====================================================
-
 def print_memory():
     try:
-        # Read current process memory
-        with open("/proc/self/status") as f:
+        # ==========================================
+        # Current Process Status
+        # ==========================================
+        with open("/proc/self/status", "r") as f:
             status = f.read()
 
         ram = "Unknown"
@@ -205,36 +206,70 @@ def print_memory():
             elif line.startswith("Threads:"):
                 threads = line.split(":", 1)[1].strip()
 
-        # Read available system memory
+        # ==========================================
+        # System Memory
+        # ==========================================
         mem_available = "Unknown"
 
-        with open("/proc/meminfo") as f:
+        with open("/proc/meminfo", "r") as f:
             for line in f:
                 if line.startswith("MemAvailable:"):
                     mem_available = line.split(":", 1)[1].strip()
                     break
 
-        # Count child processes
+        # ==========================================
+        # Open File Descriptors
+        # ==========================================
         try:
-            children = subprocess.check_output(
-                ["pgrep", "-P", str(os.getpid())],
-                text=True
-            ).strip().splitlines()
-
-            child_count = len(children)
-
+            fd_count = len(os.listdir("/proc/self/fd"))
         except Exception:
-            child_count = 0
+            fd_count = "Unknown"
 
+        # ==========================================
+        # Process Debugger
+        # ==========================================
+        child_count = 0
+        current_pid = str(os.getpid())
+
+        print(Fore.CYAN + "\n========== PROCESS DEBUG ==========")
+
+        try:
+            output = subprocess.check_output(
+                ["ps", "-ef"],
+                text=True
+            )
+
+            for line in output.splitlines()[1:]:
+
+                if current_pid in line:
+                    print(Fore.CYAN + line)
+
+                cols = line.split()
+
+                # UID PID PPID C STIME TTY TIME CMD
+                if len(cols) >= 3 and cols[2] == current_pid:
+                    child_count += 1
+
+        except Exception as e:
+            print(Fore.RED + f"Process Debug Error: {e}")
+
+        print(Fore.CYAN + "===================================")
+
+        # ==========================================
+        # Memory Report
+        # ==========================================
         print(Fore.YELLOW + "\n========== MEMORY DEBUG ==========")
-        print(Fore.YELLOW + f"RAM Used       : {ram}")
-        print(Fore.YELLOW + f"Threads        : {threads}")
-        print(Fore.GREEN  + f"Mem Available  : {mem_available}")
-        print(Fore.YELLOW + f"Child Processes: {child_count}")
+        print(Fore.YELLOW + f"PID              : {current_pid}")
+        print(Fore.YELLOW + f"RAM Used         : {ram}")
+        print(Fore.YELLOW + f"Threads          : {threads}")
+        print(Fore.GREEN  + f"Mem Available    : {mem_available}")
+        print(Fore.YELLOW + f"Open FDs         : {fd_count}")
+        print(Fore.YELLOW + f"Child Processes  : {child_count}")
         print(Fore.YELLOW + "==================================\n")
 
     except Exception as e:
-        print(f"Memory Debug Error: {e}")
+        print(Fore.RED + f"Memory Debug Error: {e}")
+
 ############################
 
 if __name__ == "__main__":
@@ -688,6 +723,12 @@ if __name__ == "__main__":
                 print(Fore.YELLOW + "⚠️ [Cache Guard]: Low-quality response detected — skipping knowledge sync.")
             gc.collect()
             print(Fore.YELLOW +f"[GC] Freed memory | Objects: {len(gc.get_objects())}")
+            print(Fore.YELLOW + f"[PID] {os.getpid()}")
+            try:
+                print(Fore.YELLOW + "[PSTREE]")
+                print(subprocess.check_output(["ps", "-ef"], text=True))
+            except Exception:
+                pass
             print("")
 
 
