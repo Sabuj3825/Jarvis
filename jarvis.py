@@ -231,7 +231,7 @@ def print_memory():
         child_count = 0
         current_pid = str(os.getpid())
 
-        print(Fore.CYAN + "\n========== PROCESS DEBUG ==========")
+        # print(Fore.CYAN + "\n========== PROCESS DEBUG ==========")
 
         try:
             output = subprocess.check_output(
@@ -241,19 +241,22 @@ def print_memory():
 
             for line in output.splitlines()[1:]:
 
-                if current_pid in line:
-                    print(Fore.CYAN + line)
+        #         if current_pid in line:
+        #             print(Fore.CYAN + line)
 
                 cols = line.split()
 
                 # UID PID PPID C STIME TTY TIME CMD
                 if len(cols) >= 3 and cols[2] == current_pid:
                     child_count += 1
+        except Exception:
+            pass
+        # except Exception as e:
+        #     print(Fore.RED + f"Process Debug Error: {e}")
 
-        except Exception as e:
-            print(Fore.RED + f"Process Debug Error: {e}")
+        # print(Fore.CYAN + "===================================")
 
-        print(Fore.CYAN + "===================================")
+
 
         # ==========================================
         # Memory Report
@@ -723,12 +726,12 @@ if __name__ == "__main__":
                 print(Fore.YELLOW + "⚠️ [Cache Guard]: Low-quality response detected — skipping knowledge sync.")
             gc.collect()
             print(Fore.YELLOW +f"[GC] Freed memory | Objects: {len(gc.get_objects())}")
-            print(Fore.YELLOW + f"[PID] {os.getpid()}")
-            try:
-                print(Fore.YELLOW + "[PSTREE]")
-                print(subprocess.check_output(["ps", "-ef"], text=True))
-            except Exception:
-                pass
+            #print(Fore.YELLOW + f"[PID] {os.getpid()}")
+            # try:
+            #     print(Fore.YELLOW + "[PSTREE]")
+            #     print(subprocess.check_output(["ps", "-ef"], text=True))
+            # except Exception:
+            #     pass
             print("")
 
 
