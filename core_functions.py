@@ -4,6 +4,8 @@ import subprocess
 from colorama import Fore, Style
 import config
 
+tts_process = None
+edge_process = None
 current_music_process = None
 
 def print_header():
@@ -30,20 +32,97 @@ def print_header():
     print(Fore.WHITE + Style.BRIGHT + "+-----------------------+----------------------------------+")
     print(Style.RESET_ALL)
 
+# def speak(text):
+#     """Non-blocking TTS — runs in background so prompt appears immediately."""
+#     try:
+#         clean_text = re.sub(r"```[\s\S]*?```", '[Code block printed to terminal]', text)
+#         clean_text = clean_text.replace("**", "").replace("__", "").replace("#", "")
+#         clean_text = " ".join(clean_text.split())
+#         # Popen = non-blocking: TTS speaks in background, main loop continues instantly
+#         subprocess.Popen(
+#             ['termux-tts-speak', clean_text],
+#             stdout=subprocess.DEVNULL,
+#             stderr=subprocess.DEVNULL
+#         )
+#     except Exception:
+#         pass
 def speak(text):
-    """Non-blocking TTS — runs in background so prompt appears immediately."""
+    """Non-blocking Edge-TTS with automatic interruption."""
+    global tts_process, edge_process
+
     try:
-        clean_text = re.sub(r"```[\s\S]*?```", '[Code block printed to terminal]', text)
-        clean_text = clean_text.replace("**", "").replace("__", "").replace("#", "")
-        clean_text = " ".join(clean_text.split())
-        # Popen = non-blocking: TTS speaks in background, main loop continues instantly
-        subprocess.Popen(
-            ['termux-tts-speak', clean_text],
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL
+        # Clean markdown/code formatting
+        clean_text = re.sub(
+            r"```[\s\S]*?```",
+            "[Code block printed to terminal]",
+            text
         )
-    except Exception:
-        pass
+        clean_text = clean_text.replace("**", "")
+        clean_text = clean_text.replace("__", "")
+        clean_text = clean_text.replace("#", "")
+        clean_text = " ".join(clean_text.split())
+
+        if not clean_text:
+            return
+
+        # Stop previous MPV playback first
+        if tts_process is not None and tts_process.poll() is None:
+            try:
+                tts_process.terminate()
+                tts_process.wait(timeout=1)
+            except subprocess.TimeoutExpired:
+                tts_process.kill()
+                tts_process.wait()
+            except Exception:
+                pass
+
+        # Stop previous Edge-TTS process
+        if edge_process is not None and edge_process.poll() is None:
+            try:
+                edge_process.terminate()
+                edge_process.wait(timeout=1)
+            except subprocess.TimeoutExpired:
+                edge_process.kill()
+                edge_process.wait()
+            except Exception:
+                pass
+
+        # Generate speech
+        edge_process = subprocess.Popen(
+            [
+                "edge-tts",
+                "--voice",
+                "en-US-AndrewMultilingualNeural",
+                "--text",
+                clean_text,
+            ],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.DEVNULL,
+            bufsize=0,
+        )
+
+        # Play speech
+        tts_process = subprocess.Popen(
+            [
+                "mpv",
+                "--no-terminal",
+                "--really-quiet",
+                "--cache=no",
+                "--profile=low-latency",
+                "--audio-buffer=0.05",
+                "-"
+            ],
+            stdin=edge_process.stdout,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+
+        # Close parent's copy of the pipe
+        if edge_process.stdout:
+            edge_process.stdout.close()
+
+    except Exception as e:
+        print(f"[TTS Error] {e}")
 
 def play_sound(file_name):
     """Non-blocking sound — runs in background so prompt appears immediately."""
