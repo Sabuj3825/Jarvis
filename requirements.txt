@@ -8,3 +8,4 @@ requests        # HTTP requests (web search, Gemini API)
 beautifulsoup4  # Web scraper HTML parser
 wikipedia       # Wikipedia knowledge lookup
 yt-dlp          # YouTube audio/video streaming
+openai          # OpenRouter API client (OpenAI-compatible SDK) — optional

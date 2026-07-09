@@ -12,6 +12,16 @@ import react_agent
 import threading
 import gc
 
+# ── NEW UNIFIED ROUTING SYSTEM ─────────────────────────────────────────────
+try:
+    from routing.intent_detector import IntentDetector, IntentType
+    from routing.knowledge_engine import KnowledgeEngine
+    from routing.ai_router import AIRouter
+    _ROUTING_AVAILABLE = True
+except ImportError as _routing_err:
+    print(f"⚠️  [Routing]: New routing system unavailable ({_routing_err}). Falling back to legacy mode.")
+    _ROUTING_AVAILABLE = False
+
 def load_json_registry(file_path):
     if os.path.exists(file_path):
         with open(file_path, "r") as f:
@@ -544,142 +554,93 @@ if __name__ == "__main__":
             reply             = ""
             _reply_confidence = "medium"  # elevated to "high" when Gemini or multi-source synthesis is used
 
-            # ── STEP 2: REACT AGENT CHECK (runs before single-path orchestrator) ─
-            if react_agent.is_react_query(processed_input):
-                print(Fore.MAGENTA + "🤖 [ReAct Agent]: Complex research query detected — activating multi-step mode.")
-                reply             = react_agent.run_react_loop(
-                    user_input, processed_input, config,
-                    commands.search_google_scrape, gemini_safe_request, _call_ollama
+            # ══════════════════════════════════════════════════════════════════
+            # STEP 2–4: UNIFIED ROUTING SYSTEM
+            # Intent Detection → Knowledge Collection → AI Provider Selection
+            # ══════════════════════════════════════════════════════════════════
+            if _ROUTING_AVAILABLE:
+                # Step 2: Detect intent (rule-based, fast — LLM only for ambiguous cases)
+                intent = IntentDetector.detect(processed_input, config)
+                print(Fore.MAGENTA + f"⚡ [Intent Detector]: {intent.value}")
+
+                # Step 3: Collect knowledge from relevant sources
+                knowledge_ctx = KnowledgeEngine.collect(
+                    processed_input,
+                    intent,
+                    config,
+                    chat_log=config.chat_log,
+                    web_scraper=commands.search_google_scrape,
                 )
-                decision          = "react"
-                web_results       = "multi_source"  # truthy — enables knowledge cache save
-                _reply_confidence = "high"           # multi-source synthesis is high confidence
+
+                # Step 4: Route to the correct AI provider pipeline
+                reply = AIRouter.route(
+                    user_input, processed_input, intent, knowledge_ctx, config,
+                    chat_log=config.chat_log,
+                )
+
+                # Map intent back to the 'decision' key + confidence used by cache logic below
+                decision          = intent.to_cache_key()
+                web_results       = knowledge_ctx.get("web_data") or knowledge_ctx.get("wiki_data")
+                _reply_confidence = "high" if knowledge_ctx.get("has_context") else "medium"
 
             else:
-                # ── STEP 2B: SINGLE-PATH ORCHESTRATOR DECISION ───────────────────────
-                decision = commands.get_tool_routing_decision(processed_input).lower()
-                print(Fore.MAGENTA + f"⚡ [Orchestrator]: Decision → {decision.upper()}")
-
-            # ── STEP 3A: CONVERSATION PATH (Bypasses all heavy scrapers) ──────────
-            if decision == 'conversation':
-                print(Fore.CYAN + f"🧠 [Local Core]: Handling casual conversation...")
-                r, err = _call_ollama(user_input, chat_history=config.chat_log)
-                if r:
-                    reply = r
+                # ── LEGACY FALLBACK (if routing/ packages failed to import) ──
+                if react_agent.is_react_query(processed_input):
+                    print(Fore.MAGENTA + "🤖 [ReAct Agent]: Multi-step research mode (legacy).")
+                    reply             = react_agent.run_react_loop(
+                        user_input, processed_input, config,
+                        commands.search_google_scrape, gemini_safe_request, _call_ollama
+                    )
+                    decision          = "react"
+                    web_results       = "multi_source"
+                    _reply_confidence = "high"
                 else:
-                    reply = "I'm here. How can I assist you?"
-
-            # ── STEP 3B: WIKIPEDIA PATH → fallback: WEB → fallback: LOCAL ────────
-            elif decision == 'wikipedia':
-                import wikipedia
-                print(Fore.CYAN + "📖 [Wikipedia]: Fetching encyclopedic entry...")
-                try:
-                    reply = wikipedia.summary(user_input, sentences=2, auto_suggest=True)
-                    print(Fore.GREEN + "✅ [Wikipedia]: Entry retrieved successfully.")
-                except Exception as e:
-                    print(Fore.YELLOW + f"⚠️  [Wikipedia]: Failed — {str(e)[:60]}")
-                    print(Fore.CYAN + "🔁 [Fallback L1]: Trying web scraper instead...")
-                    web_results = commands.search_google_scrape(processed_input)
-                    if web_results:
-                        print(Fore.GREEN + "✅ [Fallback L1]: Web scraper returned data.")
-                        reply = web_results
+                    decision = commands.get_tool_routing_decision(processed_input).lower()
+                    print(Fore.MAGENTA + f"⚡ [Orchestrator (legacy)]: Decision → {decision.upper()}")
+                    # conversation path
+                    if decision == 'conversation':
+                        r, err = _call_ollama(user_input, chat_history=config.chat_log)
+                        reply  = r if r else "I'm here. How can I assist you?"
+                    # wikipedia path
+                    elif decision == 'wikipedia':
+                        import wikipedia as _wiki_mod
+                        try:
+                            reply = _wiki_mod.summary(user_input, sentences=2, auto_suggest=True)
+                        except Exception:
+                            web_results = commands.search_google_scrape(processed_input)
+                            reply = web_results or "Wikipedia and web both unavailable."
+                    # web path
+                    elif decision == 'web':
+                        web_results = commands.search_google_scrape(processed_input)
+                        if web_results and config.API_KEY and "YOUR_GEMINI" not in config.API_KEY:
+                            try:
+                                payload = {"contents": [{"role": "user", "parts": [{"text":
+                                    f"You are Jarvis. Answer from this data only.\n\n{web_results}\n\nQuery: {user_input}"
+                                }]}]}
+                                res = gemini_safe_request(payload)
+                                reply = res.json()["candidates"][0]["content"]["parts"][0]["text"] if res.status_code == 200 else web_results
+                                if res.status_code == 200:
+                                    _reply_confidence = "high"
+                            except Exception:
+                                reply = web_results
+                        else:
+                            reply = web_results or "Web search returned nothing."
+                    # local / default path
                     else:
-                        print(Fore.YELLOW + "⚠️  [Fallback L1]: Web scraper also empty.")
-                        print(Fore.CYAN + f"🔁 [Fallback L2]: Asking local Ollama '{config.LOCAL_MODEL}'...")
                         r, err = _call_ollama(user_input, chat_history=config.chat_log)
                         if r:
-                            print(Fore.GREEN + "✅ [Fallback L2]: Ollama gave best-effort answer.")
                             reply = r
+                        elif config.API_KEY and "YOUR_GEMINI" not in config.API_KEY:
+                            try:
+                                payload = {"contents": [{"role": "user", "parts": [{"text":
+                                    f"You are Jarvis. Answer concisely: {user_input}"
+                                }]}]}
+                                res = gemini_safe_request(payload)
+                                reply = res.json()["candidates"][0]["content"]["parts"][0]["text"] if res.status_code == 200 else "❌ All routes exhausted."
+                            except Exception:
+                                reply = "❌ All routes exhausted."
                         else:
-                            print(Fore.RED + f"❌ [Fallback L2]: Ollama also failed — {err}")
-                            reply = "❌ All pipeline routes failed. Wikipedia, Web scraper, and Local core are all unavailable."
-
-            # ── STEP 3C: WEB PATH → fallback: LOCAL → fallback: GEMINI DIRECT ────
-            elif decision == 'web':
-                print(Fore.CYAN + "🌐 [Web Scraper]: Searching live network data...")
-                
-                # Strip out query noise before crawling
-                search_query = processed_input
-                for filler in ["search it on google and the answar", "search it on google", "tell me", "ask google", "and the answer"]:
-                    search_query = search_query.replace(filler, "")
-                    
-                web_results = commands.search_google_scrape(search_query.strip())
-
-                if not web_results:
-                    print(Fore.YELLOW + "⚠️  [Web Scraper]: No results returned. Network may be blocked.")
-                    print(Fore.CYAN + f"🔁 [Fallback L1]: Asking local Ollama '{config.LOCAL_MODEL}'...")
-                    r, err = _call_ollama(user_input, chat_history=config.chat_log)
-                    if r:
-                        print(Fore.GREEN + "✅ [Fallback L1]: Ollama gave best-effort answer.")
-                        reply = r
-                    else:
-                        print(Fore.RED + f"⚠️  [Fallback L1]: Ollama also failed — {err}")
-                        reply = "❌ Web scraper returned nothing and local core is offline."
-
-                elif config.API_KEY and "YOUR_GEMINI" not in config.API_KEY:
-                    print(Fore.GREEN + "✅ [Web Scraper]: Live data captured.")
-                    print(Fore.CYAN + "📡 [Cloud Escalation]: Connecting to Gemini API matrix...")
-                    try:
-                        payload = {"contents": [{"role": "user", "parts": [{"text":
-                            f"You are Jarvis, a terminal assistant created by {config.DEVELOPER_ALIAS}. "
-                            f"Answer ONLY using the following scraped web data. Do NOT add extra info.\n\n"
-                            f"Scraped Data: {web_results}\n\nQuery: {user_input}"
-                        }]}]}
-                        res = gemini_safe_request(payload)
-
-                        if res.status_code == 429:
-                            print(Fore.YELLOW + "⚠️  [Cloud Escalation]: Gemini rate limit hit (429). Serving raw web data.")
-                            reply = web_results
-                        elif res.status_code != 200:
-                            print(Fore.YELLOW + f"⚠️  [Cloud Escalation]: Gemini error (HTTP {res.status_code}). Serving raw web data.")
-                            reply = web_results
-                        else:
-                            reply = res.json()["candidates"][0]["content"]["parts"][0]["text"]
-                            _reply_confidence = "high"   # Gemini refined the raw web data
-                            print(Fore.GREEN + "✅ [Cloud Escalation]: Gemini response received.")
-
-                    except requests.exceptions.Timeout:
-                        print(Fore.YELLOW + "⚠️  [Cloud Escalation]: Gemini timed out (>20s). Serving raw web data.")
-                        reply = web_results
-                    except Exception as e:
-                        print(Fore.YELLOW + f"⚠️  [Cloud Escalation]: Gemini failed — {str(e)[:60]}. Serving raw web data.")
-                        reply = web_results
-                else:
-                    print(Fore.GREEN + "✅ [Web Scraper]: Live data captured.")
-                    print(Fore.YELLOW + "💡 [Cloud Escalation]: No Gemini key. Serving raw web data directly.")
-                    reply = web_results
-
-            # ── STEP 3D: LOCAL PATH → fallback: GEMINI DIRECT ───────────────────
-            elif decision not in ("react", "wikipedia", "web", "conversation"):
-                print(Fore.CYAN + f"🧠 [Local Core]: Routing to Ollama '{config.LOCAL_MODEL}'...")
-                r, err = _call_ollama(user_input, chat_history=config.chat_log)
-                if r:
-                    print(Fore.GREEN + "✅ [Local Core]: Ollama response received.")
-                    reply = r
-                else:
-                    print(Fore.RED + f"⚠️  [Local Core]: Ollama failed — {err}")
-                    if config.API_KEY and "YOUR_GEMINI" not in config.API_KEY:
-                        print(Fore.CYAN + "🔁 [Fallback L1]: Ollama down. Escalating to Gemini...")
-                        try:
-                            payload = {"contents": [{"role": "user", "parts": [{"text":
-                                f"You are Jarvis, a terminal assistant created by {config.DEVELOPER_ALIAS}. "
-                                f"Answer concisely: {user_input}"
-                            }]}]}
-                            res = gemini_safe_request(payload)
-                            if res.status_code == 200:
-                                reply = res.json()["candidates"][0]["content"]["parts"][0]["text"]
-                                print(Fore.GREEN + "✅ [Fallback L1]: Gemini answered as Ollama backup.")
-                            elif res.status_code == 429:
-                                print(Fore.RED + "⚠️  [Fallback L1]: Gemini rate limit (429). All routes exhausted.")
-                                reply = "❌ Local core offline + Gemini rate limited. Try again later."
-                            else:
-                                print(Fore.RED + f"⚠️  [Fallback L1]: Gemini error (HTTP {res.status_code}). All routes exhausted.")
-                                reply = "❌ Local core offline + Gemini unavailable."
-                        except Exception as e:
-                            print(Fore.RED + f"⚠️  [Fallback L1]: Gemini also failed — {str(e)[:60]}")
-                            reply = "❌ All pipeline routes exhausted. No response available."
-                    else:
-                        reply = "❌ Local core offline. No Gemini key set. Run: ollama serve"
+                            reply = "❌ Local core offline. Run: ollama serve"
 
             # =========================================================================
             # CORE OUTPUT DISPLAY & WRITING INTERFACES

@@ -26,6 +26,13 @@ API_KEY = os.environ.get("GEMINI_API_KEY", "YOUR_GEMINI_API_KEY_HERE")
 URL = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={API_KEY}"
 HEADERS = {"Content-Type": "application/json"}
 
+# --- OPENROUTER INTEGRATION ---
+# Set OPENROUTER_API_KEY env var to enable OpenRouter cloud fallback.
+# Run update_openrouter_models.py once to populate openrouter_models.json.
+OPENROUTER_API_KEY     = os.environ.get("OPENROUTER_API_KEY", "")
+OPENROUTER_MODELS_FILE = os.path.join(_BASE_DIR, "openrouter_models.json")
+OPENROUTER_ENABLED     = bool(OPENROUTER_API_KEY)   # auto-detected
+
 # --- SYSTEM AUTOMATION PATHS ---
 MUSIC_DIR = "/data/data/com.termux/files/home/storage/music"
 GOOGLE_SEARCH_URL = "https://www.google.com/search"

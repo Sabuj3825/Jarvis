@@ -75,6 +75,14 @@ def run_dependency_check():
         ("termux-location",     "pkg install termux-api",    "GPS location command"),
     ]
 
+    # ====================================================
+    # 2b. OPTIONAL Python packages (graceful degradation)
+    # ====================================================
+    OPTIONAL_PY = [
+        # (import_name,  pip_package_name, feature_affected)
+        ("openai",  "openai",  "OpenRouter AI provider (pip install openai)"),
+    ]
+
     missing_critical = []
     missing_optional = []
 
@@ -87,6 +95,11 @@ def run_dependency_check():
     for binary, install_cmd, feature in OPTIONAL_BINS:
         if not _check_binary(binary):
             missing_optional.append((binary, install_cmd, feature))
+
+    # --- Check optional Python packages ---
+    for import_name, pip_name, feature in OPTIONAL_PY:
+        if not _check_python_package(import_name):
+            missing_optional.append((pip_name, f"pip install {pip_name}", feature))
 
     # ====================================================
     # 3. REPORT

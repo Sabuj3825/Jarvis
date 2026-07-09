@@ -28,7 +28,9 @@ def print_header():
     print(Fore.YELLOW + "| 🔋 Telemetry Tracker  " + Fore.WHITE + "| Termux battery, weather, loc apps|")
     print(Fore.YELLOW + "| 📋 Task Manager       " + Fore.WHITE + "| Persistent JSON to-do matrices   |")
     print(Fore.YELLOW + "| 🛡️  Identity Shield   " + Fore.WHITE + "| Solid custom branding overrides  |")
-    print(Fore.YELLOW + "| ⚡ Local-First Core   " + Fore.WHITE + "| Ollama routing with Cloud Escal. |")
+    print(Fore.YELLOW + "| 🎯 Intent Engine      " + Fore.WHITE + "| Hybrid rules/LLM taxonomy router |")
+    print(Fore.YELLOW + "| 🌐 Knowledge Engine   " + Fore.WHITE + "| Multi-source context synthesis   |")
+    print(Fore.YELLOW + "| 🤖 Multi-AI Matrix    " + Fore.WHITE + "| Ollama/Gemini/OpenRouter cascade |")
     print(Fore.WHITE + Style.BRIGHT + "+-----------------------+----------------------------------+")
     print(Style.RESET_ALL)
 
