@@ -1,0 +1,2105 @@
+{
+    "last_updated": "2026-07-09T16:30:17.796845+00:00",
+    "chat": [
+        {
+            "model": "ai21/jamba-large-1.7",
+            "latency": 0.731,
+            "prompt_tokens": 17,
+            "completion_tokens": 4,
+            "total_tokens": 21,
+            "cost": 6.6e-05
+        },
+        {
+            "model": "aion-labs/aion-2.0",
+            "latency": 1.536,
+            "prompt_tokens": 10,
+            "completion_tokens": 12,
+            "total_tokens": 22,
+            "cost": 2.72e-05
+        },
+        {
+            "model": "aion-labs/aion-3.0",
+            "latency": 3.331,
+            "prompt_tokens": 13,
+            "completion_tokens": 16,
+            "total_tokens": 29,
+            "cost": 0.000135
+        },
+        {
+            "model": "aion-labs/aion-3.0-mini",
+            "latency": 3.321,
+            "prompt_tokens": 10,
+            "completion_tokens": 17,
+            "total_tokens": 27,
+            "cost": 3.08e-05
+        },
+        {
+            "model": "aion-labs/aion-rp-llama-3.1-8b",
+            "latency": 1.616,
+            "prompt_tokens": 15,
+            "completion_tokens": 10,
+            "total_tokens": 25,
+            "cost": 2.8e-05
+        },
+        {
+            "model": "amazon/nova-micro-v1",
+            "latency": 0.71,
+            "prompt_tokens": 7,
+            "completion_tokens": 2,
+            "total_tokens": 9,
+            "cost": 5.25e-07
+        },
+        {
+            "model": "cohere/command-a",
+            "latency": 21.647,
+            "prompt_tokens": 7,
+            "completion_tokens": 1,
+            "total_tokens": 8,
+            "cost": 2.75e-05
+        },
+        {
+            "model": "cohere/command-r-plus-08-2024",
+            "latency": 0.936,
+            "prompt_tokens": 7,
+            "completion_tokens": 2,
+            "total_tokens": 9,
+            "cost": 3.75e-05
+        },
+        {
+            "model": "cohere/north-mini-code:free",
+            "latency": 3.255,
+            "prompt_tokens": 7,
+            "completion_tokens": 10,
+            "total_tokens": 17,
+            "cost": 0
+        },
+        {
+            "model": "deepcogito/cogito-v2.1-671b",
+            "latency": 0.869,
+            "prompt_tokens": 35,
+            "completion_tokens": 2,
+            "total_tokens": 37,
+            "cost": 4.625e-05
+        },
+        {
+            "model": "deepseek/deepseek-chat",
+            "latency": 1.332,
+            "prompt_tokens": 10,
+            "completion_tokens": 2,
+            "total_tokens": 12,
+            "cost": 6.6e-06
+        },
+        {
+            "model": "deepseek/deepseek-chat-v3-0324",
+            "latency": 2.653,
+            "prompt_tokens": 10,
+            "completion_tokens": 1,
+            "total_tokens": 11,
+            "cost": 4.04e-06
+        },
+        {
+            "model": "deepseek/deepseek-v3.1-terminus",
+            "latency": 1.903,
+            "prompt_tokens": 11,
+            "completion_tokens": 2,
+            "total_tokens": 13,
+            "cost": 4.97e-06
+        },
+        {
+            "model": "deepseek/deepseek-v3.2-exp",
+            "latency": 1.8,
+            "prompt_tokens": 11,
+            "completion_tokens": 2,
+            "total_tokens": 13,
+            "cost": 3.79e-06
+        },
+        {
+            "model": "deepseek/deepseek-v4-flash",
+            "latency": 2.286,
+            "prompt_tokens": 11,
+            "completion_tokens": 11,
+            "total_tokens": 22,
+            "cost": 4.51e-06
+        },
+        {
+            "model": "google/gemma-2-27b-it",
+            "latency": 1.0,
+            "prompt_tokens": 16,
+            "completion_tokens": 10,
+            "total_tokens": 26,
+            "cost": 1.69e-05
+        },
+        {
+            "model": "google/gemma-3n-e4b-it",
+            "latency": 0.692,
+            "prompt_tokens": 23,
+            "completion_tokens": 4,
+            "total_tokens": 27,
+            "cost": 1.86e-06
+        },
+        {
+            "model": "gryphe/mythomax-l2-13b",
+            "latency": 0.526,
+            "prompt_tokens": 44,
+            "completion_tokens": 3,
+            "total_tokens": 47,
+            "cost": 2.82e-06
+        },
+        {
+            "model": "ibm-granite/granite-4.0-h-micro",
+            "latency": 0.738,
+            "prompt_tokens": 37,
+            "completion_tokens": 2,
+            "total_tokens": 39,
+            "cost": 8.53e-07
+        },
+        {
+            "model": "inclusionai/ling-2.6-1t",
+            "latency": 1.316,
+            "prompt_tokens": 25,
+            "completion_tokens": 2,
+            "total_tokens": 27,
+            "cost": 3.125e-06
+        },
+        {
+            "model": "inclusionai/ling-2.6-flash",
+            "latency": 0.822,
+            "prompt_tokens": 25,
+            "completion_tokens": 2,
+            "total_tokens": 27,
+            "cost": 3.1e-07
+        },
+        {
+            "model": "inflection/inflection-3-pi",
+            "latency": 42.756,
+            "prompt_tokens": null,
+            "completion_tokens": null,
+            "total_tokens": null,
+            "cost": null
+        },
+        {
+            "model": "inflection/inflection-3-productivity",
+            "latency": 39.056,
+            "prompt_tokens": null,
+            "completion_tokens": null,
+            "total_tokens": null,
+            "cost": null
+        },
+        {
+            "model": "kwaipilot/kat-coder-pro-v2",
+            "latency": 1.128,
+            "prompt_tokens": 15,
+            "completion_tokens": 2,
+            "total_tokens": 17,
+            "cost": 6.9e-06
+        },
+        {
+            "model": "mancer/weaver",
+            "latency": 1.843,
+            "prompt_tokens": 93,
+            "completion_tokens": 10,
+            "total_tokens": 103,
+            "cost": 7.75e-05
+        },
+        {
+            "model": "meta-llama/llama-3-8b-instruct",
+            "latency": 1.697,
+            "prompt_tokens": 17,
+            "completion_tokens": 2,
+            "total_tokens": 19,
+            "cost": 2.66e-06
+        },
+        {
+            "model": "meta-llama/llama-3.1-70b-instruct",
+            "latency": 1.915,
+            "prompt_tokens": 17,
+            "completion_tokens": 2,
+            "total_tokens": 19,
+            "cost": 7.6e-06
+        },
+        {
+            "model": "meta-llama/llama-3.1-8b-instruct",
+            "latency": 0.946,
+            "prompt_tokens": 18,
+            "completion_tokens": 2,
+            "total_tokens": 20,
+            "cost": 4.6e-07
+        },
+        {
+            "model": "meta-llama/llama-3.2-1b-instruct",
+            "latency": 0.758,
+            "prompt_tokens": 18,
+            "completion_tokens": 2,
+            "total_tokens": 20,
+            "cost": 8.88e-07
+        },
+        {
+            "model": "meta-llama/llama-3.3-70b-instruct",
+            "latency": 0.597,
+            "prompt_tokens": 17,
+            "completion_tokens": 2,
+            "total_tokens": 19,
+            "cost": 2.34e-06
+        },
+        {
+            "model": "microsoft/wizardlm-2-8x22b",
+            "latency": 0.785,
+            "prompt_tokens": 41,
+            "completion_tokens": 1,
+            "total_tokens": 42,
+            "cost": 2.604e-05
+        },
+        {
+            "model": "minimax/minimax-m2-her",
+            "latency": 1.029,
+            "prompt_tokens": 198,
+            "completion_tokens": 10,
+            "total_tokens": 208,
+            "cost": 7.14e-05
+        },
+        {
+            "model": "minimax/minimax-m2.1",
+            "latency": 1.248,
+            "prompt_tokens": 48,
+            "completion_tokens": 10,
+            "total_tokens": 58,
+            "cost": 3.84e-05
+        },
+        {
+            "model": "minimax/minimax-m2.5",
+            "latency": 3.106,
+            "prompt_tokens": 45,
+            "completion_tokens": 91,
+            "total_tokens": 136,
+            "cost": 0.0001227
+        },
+        {
+            "model": "minimax/minimax-m2.7",
+            "latency": 0.294,
+            "prompt_tokens": 29,
+            "completion_tokens": 10,
+            "total_tokens": 39,
+            "cost": 3.54e-05
+        },
+        {
+            "model": "mistralai/mistral-nemo",
+            "latency": 2.771,
+            "prompt_tokens": 10,
+            "completion_tokens": 2,
+            "total_tokens": 12,
+            "cost": 1.8e-06
+        },
+        {
+            "model": "mistralai/mistral-small-24b-instruct-2501",
+            "latency": 0.819,
+            "prompt_tokens": 170,
+            "completion_tokens": 3,
+            "total_tokens": 173,
+            "cost": 8.74e-06
+        },
+        {
+            "model": "moonshotai/kimi-k2",
+            "latency": 1.315,
+            "prompt_tokens": 16,
+            "completion_tokens": 2,
+            "total_tokens": 18,
+            "cost": 1.372e-05
+        },
+        {
+            "model": "moonshotai/kimi-k2-0905",
+            "latency": 0.867,
+            "prompt_tokens": 16,
+            "completion_tokens": 2,
+            "total_tokens": 18,
+            "cost": 1.46e-05
+        },
+        {
+            "model": "morph/morph-v3-fast",
+            "latency": 1.028,
+            "prompt_tokens": 95,
+            "completion_tokens": 3,
+            "total_tokens": 98,
+            "cost": 7.96e-05
+        },
+        {
+            "model": "morph/morph-v3-large",
+            "latency": 0.93,
+            "prompt_tokens": 103,
+            "completion_tokens": 2,
+            "total_tokens": 105,
+            "cost": 9.65e-05
+        },
+        {
+            "model": "nvidia/nemotron-3-nano-30b-a3b",
+            "latency": 0.717,
+            "prompt_tokens": 23,
+            "completion_tokens": 10,
+            "total_tokens": 33,
+            "cost": 3.15e-06
+        },
+        {
+            "model": "nvidia/nemotron-3-nano-30b-a3b:free",
+            "latency": 0.728,
+            "prompt_tokens": 23,
+            "completion_tokens": 10,
+            "total_tokens": 33,
+            "cost": 0
+        },
+        {
+            "model": "nvidia/nemotron-3-super-120b-a12b",
+            "latency": 0.742,
+            "prompt_tokens": 23,
+            "completion_tokens": 10,
+            "total_tokens": 33,
+            "cost": 5.955e-06
+        },
+        {
+            "model": "nvidia/nemotron-3-super-120b-a12b:free",
+            "latency": 1.145,
+            "prompt_tokens": 23,
+            "completion_tokens": 10,
+            "total_tokens": 33,
+            "cost": 0
+        },
+        {
+            "model": "openai/gpt-3.5-turbo",
+            "latency": 1.039,
+            "prompt_tokens": 14,
+            "completion_tokens": 1,
+            "total_tokens": 15,
+            "cost": 8.5e-06
+        },
+        {
+            "model": "openai/gpt-3.5-turbo-0613",
+            "latency": 1.211,
+            "prompt_tokens": 14,
+            "completion_tokens": 2,
+            "total_tokens": 16,
+            "cost": 1.8e-05
+        },
+        {
+            "model": "openai/gpt-3.5-turbo-16k",
+            "latency": 0.734,
+            "prompt_tokens": 14,
+            "completion_tokens": 1,
+            "total_tokens": 15,
+            "cost": 4.6e-05
+        },
+        {
+            "model": "openai/gpt-3.5-turbo-instruct",
+            "latency": 1.474,
+            "prompt_tokens": 15,
+            "completion_tokens": 2,
+            "total_tokens": 17,
+            "cost": 2.65e-05
+        },
+        {
+            "model": "openai/gpt-4o-mini-search-preview",
+            "latency": 3.507,
+            "prompt_tokens": 7,
+            "completion_tokens": 2,
+            "total_tokens": 9,
+            "cost": 0.02750225
+        },
+        {
+            "model": "openai/gpt-4o-search-preview",
+            "latency": 2.1,
+            "prompt_tokens": 7,
+            "completion_tokens": 2,
+            "total_tokens": 9,
+            "cost": 0.0350375
+        },
+        {
+            "model": "openai/gpt-oss-20b",
+            "latency": 1.613,
+            "prompt_tokens": 61,
+            "completion_tokens": 10,
+            "total_tokens": 71,
+            "cost": 3.23e-06
+        },
+        {
+            "model": "openai/gpt-oss-20b:free",
+            "latency": 2.758,
+            "prompt_tokens": 76,
+            "completion_tokens": 10,
+            "total_tokens": 86,
+            "cost": 0
+        },
+        {
+            "model": "openrouter/fusion",
+            "latency": 1.419,
+            "prompt_tokens": 872,
+            "completion_tokens": 4,
+            "total_tokens": 876,
+            "cost": 0.00446
+        },
+        {
+            "model": "openrouter/pareto-code",
+            "latency": 0.829,
+            "prompt_tokens": 12,
+            "completion_tokens": 10,
+            "total_tokens": 22,
+            "cost": 5.568e-05
+        },
+        {
+            "model": "poolside/laguna-xs-2.1",
+            "latency": 2.555,
+            "prompt_tokens": 21,
+            "completion_tokens": 10,
+            "total_tokens": 31,
+            "cost": 2.46e-06
+        },
+        {
+            "model": "poolside/laguna-xs-2.1:free",
+            "latency": 2.554,
+            "prompt_tokens": 50,
+            "completion_tokens": 10,
+            "total_tokens": 60,
+            "cost": 0
+        },
+        {
+            "model": "qwen/qwen-2.5-72b-instruct",
+            "latency": 1.312,
+            "prompt_tokens": 15,
+            "completion_tokens": 1,
+            "total_tokens": 16,
+            "cost": 5.8e-06
+        },
+        {
+            "model": "qwen/qwen-2.5-7b-instruct",
+            "latency": 0.925,
+            "prompt_tokens": 36,
+            "completion_tokens": 2,
+            "total_tokens": 38,
+            "cost": 1.64e-06
+        },
+        {
+            "model": "qwen/qwen-plus",
+            "latency": 0.407,
+            "prompt_tokens": 15,
+            "completion_tokens": 1,
+            "total_tokens": 16,
+            "cost": 4.68e-06
+        },
+        {
+            "model": "qwen/qwen3-235b-a22b-2507",
+            "latency": 6.518,
+            "prompt_tokens": 15,
+            "completion_tokens": 1,
+            "total_tokens": 16,
+            "cost": 3.88e-06
+        },
+        {
+            "model": "qwen/qwen3-coder-30b-a3b-instruct",
+            "latency": 2.986,
+            "prompt_tokens": 15,
+            "completion_tokens": 2,
+            "total_tokens": 17,
+            "cost": 1.015e-05
+        },
+        {
+            "model": "qwen/qwen3-coder-flash",
+            "latency": 1.282,
+            "prompt_tokens": 15,
+            "completion_tokens": 1,
+            "total_tokens": 16,
+            "cost": 3.9e-06
+        },
+        {
+            "model": "qwen/qwen3-coder-next",
+            "latency": 0.8,
+            "prompt_tokens": 15,
+            "completion_tokens": 2,
+            "total_tokens": 17,
+            "cost": 3.4e-06
+        },
+        {
+            "model": "qwen/qwen3-coder-plus",
+            "latency": 0.849,
+            "prompt_tokens": 15,
+            "completion_tokens": 1,
+            "total_tokens": 16,
+            "cost": 1.3e-05
+        },
+        {
+            "model": "qwen/qwen3.6-max-preview",
+            "latency": 3.527,
+            "prompt_tokens": 17,
+            "completion_tokens": 157,
+            "total_tokens": 174,
+            "cost": 0.00099736
+        },
+        {
+            "model": "qwen/qwen3.7-max",
+            "latency": 3.882,
+            "prompt_tokens": 17,
+            "completion_tokens": 171,
+            "total_tokens": 188,
+            "cost": 0.0006625
+        },
+        {
+            "model": "rekaai/reka-flash-3",
+            "latency": 168.447,
+            "prompt_tokens": 14,
+            "completion_tokens": 10,
+            "total_tokens": 24,
+            "cost": 3.4e-06
+        },
+        {
+            "model": "relace/relace-search",
+            "latency": 2.665,
+            "prompt_tokens": 15,
+            "completion_tokens": 2,
+            "total_tokens": 17,
+            "cost": 2.1e-05
+        },
+        {
+            "model": "stepfun/step-3.5-flash",
+            "latency": 300.091,
+            "prompt_tokens": null,
+            "completion_tokens": null,
+            "total_tokens": null,
+            "cost": null
+        },
+        {
+            "model": "thedrummer/cydonia-24b-v4.1",
+            "latency": 0.534,
+            "prompt_tokens": 184,
+            "completion_tokens": 2,
+            "total_tokens": 186,
+            "cost": 2.98e-05
+        },
+        {
+            "model": "thedrummer/rocinante-12b",
+            "latency": 1.098,
+            "prompt_tokens": 30,
+            "completion_tokens": 7,
+            "total_tokens": 37,
+            "cost": 1.1e-05
+        },
+        {
+            "model": "thedrummer/skyfall-36b-v2",
+            "latency": 0.515,
+            "prompt_tokens": 184,
+            "completion_tokens": 3,
+            "total_tokens": 187,
+            "cost": 5.08e-05
+        },
+        {
+            "model": "thedrummer/unslopnemo-12b",
+            "latency": 1.007,
+            "prompt_tokens": 13,
+            "completion_tokens": 2,
+            "total_tokens": 15,
+            "cost": 6e-06
+        },
+        {
+            "model": "undi95/remm-slerp-l2-13b",
+            "latency": 1.744,
+            "prompt_tokens": 44,
+            "completion_tokens": 3,
+            "total_tokens": 47,
+            "cost": 2.25e-05
+        },
+        {
+            "model": "upstage/solar-pro-3",
+            "latency": 1.114,
+            "prompt_tokens": 76,
+            "completion_tokens": 3,
+            "total_tokens": 79,
+            "cost": 6.72e-06
+        },
+        {
+            "model": "writer/palmyra-x5",
+            "latency": 0.705,
+            "prompt_tokens": 244,
+            "completion_tokens": 4,
+            "total_tokens": 248,
+            "cost": 0.0001704
+        },
+        {
+            "model": "xiaomi/mimo-v2.5-pro",
+            "latency": 1.856,
+            "prompt_tokens": 258,
+            "completion_tokens": 10,
+            "total_tokens": 268,
+            "cost": 7.92e-05
+        },
+        {
+            "model": "z-ai/glm-4.5",
+            "latency": 2.148,
+            "prompt_tokens": 12,
+            "completion_tokens": 10,
+            "total_tokens": 22,
+            "cost": 2.577e-05
+        },
+        {
+            "model": "z-ai/glm-4.5-air",
+            "latency": 1.039,
+            "prompt_tokens": 12,
+            "completion_tokens": 10,
+            "total_tokens": 22,
+            "cost": 9.64e-06
+        },
+        {
+            "model": "z-ai/glm-4.6",
+            "latency": 1.537,
+            "prompt_tokens": 12,
+            "completion_tokens": 10,
+            "total_tokens": 22,
+            "cost": 2.116e-05
+        },
+        {
+            "model": "z-ai/glm-4.7-flash",
+            "latency": 1.027,
+            "prompt_tokens": 12,
+            "completion_tokens": 10,
+            "total_tokens": 22,
+            "cost": 4.72e-06
+        },
+        {
+            "model": "z-ai/glm-5",
+            "latency": 1.618,
+            "prompt_tokens": 12,
+            "completion_tokens": 10,
+            "total_tokens": 22,
+            "cost": 4.4e-05
+        },
+        {
+            "model": "z-ai/glm-5-turbo",
+            "latency": 2.503,
+            "prompt_tokens": 12,
+            "completion_tokens": 10,
+            "total_tokens": 22,
+            "cost": 5.44e-05
+        },
+        {
+            "model": "z-ai/glm-5.1",
+            "latency": 1.194,
+            "prompt_tokens": 12,
+            "completion_tokens": 10,
+            "total_tokens": 22,
+            "cost": 4.422e-05
+        }
+    ],
+    "reasoning": [
+        {
+            "model": "arcee-ai/trinity-large-thinking",
+            "latency": 0.887,
+            "prompt_tokens": 17,
+            "completion_tokens": 10,
+            "total_tokens": 27,
+            "cost": 1.225e-05
+        },
+        {
+            "model": "arcee-ai/trinity-mini",
+            "latency": 1.176,
+            "prompt_tokens": 17,
+            "completion_tokens": 10,
+            "total_tokens": 27,
+            "cost": 2.265e-06
+        },
+        {
+            "model": "cohere/command-r-08-2024",
+            "latency": 0.814,
+            "prompt_tokens": 7,
+            "completion_tokens": 2,
+            "total_tokens": 9,
+            "cost": 2.25e-06
+        },
+        {
+            "model": "cohere/command-r7b-12-2024",
+            "latency": 0.785,
+            "prompt_tokens": 7,
+            "completion_tokens": 1,
+            "total_tokens": 8,
+            "cost": 4.125e-07
+        },
+        {
+            "model": "deepseek/deepseek-chat-v3.1",
+            "latency": 1.898,
+            "prompt_tokens": 14,
+            "completion_tokens": 1,
+            "total_tokens": 15,
+            "cost": 4.78e-06
+        },
+        {
+            "model": "deepseek/deepseek-r1",
+            "latency": 1.684,
+            "prompt_tokens": 10,
+            "completion_tokens": 10,
+            "total_tokens": 20,
+            "cost": 3.2e-05
+        },
+        {
+            "model": "deepseek/deepseek-r1-0528",
+            "latency": 10.48,
+            "prompt_tokens": 12,
+            "completion_tokens": 116,
+            "total_tokens": 128,
+            "cost": 0.00025888
+        },
+        {
+            "model": "deepseek/deepseek-r1-distill-llama-70b",
+            "latency": 1.146,
+            "prompt_tokens": 10,
+            "completion_tokens": 10,
+            "total_tokens": 20,
+            "cost": 1.6e-05
+        },
+        {
+            "model": "deepseek/deepseek-v3.2",
+            "latency": 2.088,
+            "prompt_tokens": 17,
+            "completion_tokens": 2,
+            "total_tokens": 19,
+            "cost": 5.373e-06
+        },
+        {
+            "model": "deepseek/deepseek-v4-pro",
+            "latency": 4.101,
+            "prompt_tokens": 11,
+            "completion_tokens": 38,
+            "total_tokens": 49,
+            "cost": 0.00013564782
+        },
+        {
+            "model": "inception/mercury-2",
+            "latency": 1.251,
+            "prompt_tokens": 324,
+            "completion_tokens": 9,
+            "total_tokens": 333,
+            "cost": 1.9575e-05
+        },
+        {
+            "model": "inclusionai/ring-2.6-1t",
+            "latency": 1.826,
+            "prompt_tokens": 30,
+            "completion_tokens": 10,
+            "total_tokens": 40,
+            "cost": 8.5e-06
+        },
+        {
+            "model": "meta-llama/llama-3.2-3b-instruct",
+            "latency": 0.764,
+            "prompt_tokens": 42,
+            "completion_tokens": 2,
+            "total_tokens": 44,
+            "cost": 2.8078e-06
+        },
+        {
+            "model": "microsoft/phi-4",
+            "latency": 0.506,
+            "prompt_tokens": 14,
+            "completion_tokens": 2,
+            "total_tokens": 16,
+            "cost": 1.26e-06
+        },
+        {
+            "model": "minimax/minimax-m1",
+            "latency": 1.161,
+            "prompt_tokens": 453,
+            "completion_tokens": 10,
+            "total_tokens": 463,
+            "cost": 0.0002032
+        },
+        {
+            "model": "minimax/minimax-m2",
+            "latency": 0.805,
+            "prompt_tokens": 29,
+            "completion_tokens": 10,
+            "total_tokens": 39,
+            "cost": 2.07e-05
+        },
+        {
+            "model": "moonshotai/kimi-k2-thinking",
+            "latency": 3.405,
+            "prompt_tokens": 15,
+            "completion_tokens": 89,
+            "total_tokens": 104,
+            "cost": 0.0002315
+        },
+        {
+            "model": "nousresearch/hermes-3-llama-3.1-405b",
+            "latency": 0.609,
+            "prompt_tokens": 17,
+            "completion_tokens": 1,
+            "total_tokens": 18,
+            "cost": 1.8e-05
+        },
+        {
+            "model": "nousresearch/hermes-3-llama-3.1-70b",
+            "latency": 1.216,
+            "prompt_tokens": 15,
+            "completion_tokens": 10,
+            "total_tokens": 25,
+            "cost": 1.75e-05
+        },
+        {
+            "model": "nousresearch/hermes-4-405b",
+            "latency": 0.523,
+            "prompt_tokens": 31,
+            "completion_tokens": 2,
+            "total_tokens": 33,
+            "cost": 3.7e-05
+        },
+        {
+            "model": "nousresearch/hermes-4-70b",
+            "latency": 0.614,
+            "prompt_tokens": 31,
+            "completion_tokens": 2,
+            "total_tokens": 33,
+            "cost": 4.83e-06
+        },
+        {
+            "model": "nvidia/llama-3.3-nemotron-super-49b-v1.5",
+            "latency": 0.606,
+            "prompt_tokens": 26,
+            "completion_tokens": 10,
+            "total_tokens": 36,
+            "cost": 1.44e-05
+        },
+        {
+            "model": "nvidia/nemotron-3-ultra-550b-a55b",
+            "latency": 3.62,
+            "prompt_tokens": 23,
+            "completion_tokens": 10,
+            "total_tokens": 33,
+            "cost": 4.98e-05
+        },
+        {
+            "model": "nvidia/nemotron-nano-9b-v2:free",
+            "latency": 1.011,
+            "prompt_tokens": 19,
+            "completion_tokens": 10,
+            "total_tokens": 29,
+            "cost": 0
+        },
+        {
+            "model": "openai/gpt-4",
+            "latency": 0.701,
+            "prompt_tokens": 14,
+            "completion_tokens": 1,
+            "total_tokens": 15,
+            "cost": 0.00048
+        },
+        {
+            "model": "openai/gpt-oss-120b",
+            "latency": 1.772,
+            "prompt_tokens": 74,
+            "completion_tokens": 10,
+            "total_tokens": 84,
+            "cost": 5e-06
+        },
+        {
+            "model": "openai/gpt-oss-safeguard-20b",
+            "latency": 0.158,
+            "prompt_tokens": 78,
+            "completion_tokens": 10,
+            "total_tokens": 88,
+            "cost": 8.85e-06
+        },
+        {
+            "model": "poolside/laguna-m.1",
+            "latency": 0.6,
+            "prompt_tokens": 21,
+            "completion_tokens": 10,
+            "total_tokens": 31,
+            "cost": 7.5e-06
+        },
+        {
+            "model": "poolside/laguna-m.1:free",
+            "latency": 2.026,
+            "prompt_tokens": 21,
+            "completion_tokens": 10,
+            "total_tokens": 31,
+            "cost": 0
+        },
+        {
+            "model": "qwen/qwen-2.5-coder-32b-instruct",
+            "latency": 0.711,
+            "prompt_tokens": 36,
+            "completion_tokens": 2,
+            "total_tokens": 38,
+            "cost": 2.576e-05
+        },
+        {
+            "model": "qwen/qwen-plus-2025-07-28",
+            "latency": 0.416,
+            "prompt_tokens": 15,
+            "completion_tokens": 1,
+            "total_tokens": 16,
+            "cost": 4.68e-06
+        },
+        {
+            "model": "qwen/qwen-plus-2025-07-28:thinking",
+            "latency": 5.233,
+            "prompt_tokens": 15,
+            "completion_tokens": 136,
+            "total_tokens": 151,
+            "cost": 0.00010998
+        },
+        {
+            "model": "qwen/qwen3-14b",
+            "latency": 0.665,
+            "prompt_tokens": 16,
+            "completion_tokens": 10,
+            "total_tokens": 26,
+            "cost": 4.32e-06
+        },
+        {
+            "model": "qwen/qwen3-235b-a22b",
+            "latency": 1.626,
+            "prompt_tokens": 15,
+            "completion_tokens": 107,
+            "total_tokens": 122,
+            "cost": 0.000201565
+        },
+        {
+            "model": "qwen/qwen3-235b-a22b-thinking-2507",
+            "latency": 1.755,
+            "prompt_tokens": 16,
+            "completion_tokens": 10,
+            "total_tokens": 26,
+            "cost": 2.668e-05
+        },
+        {
+            "model": "qwen/qwen3-30b-a3b",
+            "latency": 1.01,
+            "prompt_tokens": 16,
+            "completion_tokens": 10,
+            "total_tokens": 26,
+            "cost": 6.92e-06
+        },
+        {
+            "model": "qwen/qwen3-30b-a3b-instruct-2507",
+            "latency": 2.657,
+            "prompt_tokens": 15,
+            "completion_tokens": 2,
+            "total_tokens": 17,
+            "cost": 1.10835e-06
+        },
+        {
+            "model": "qwen/qwen3-30b-a3b-thinking-2507",
+            "latency": 1.492,
+            "prompt_tokens": 15,
+            "completion_tokens": 163,
+            "total_tokens": 178,
+            "cost": 0.00025623
+        },
+        {
+            "model": "qwen/qwen3-32b",
+            "latency": 0.843,
+            "prompt_tokens": 16,
+            "completion_tokens": 10,
+            "total_tokens": 26,
+            "cost": 4.08e-06
+        },
+        {
+            "model": "qwen/qwen3-8b",
+            "latency": 5.225,
+            "prompt_tokens": 15,
+            "completion_tokens": 266,
+            "total_tokens": 281,
+            "cost": 0.000122785
+        },
+        {
+            "model": "qwen/qwen3-coder",
+            "latency": 0.996,
+            "prompt_tokens": 15,
+            "completion_tokens": 1,
+            "total_tokens": 16,
+            "cost": 6.75e-06
+        },
+        {
+            "model": "qwen/qwen3-max",
+            "latency": 1.546,
+            "prompt_tokens": 15,
+            "completion_tokens": 1,
+            "total_tokens": 16,
+            "cost": 1.56e-05
+        },
+        {
+            "model": "qwen/qwen3-max-thinking",
+            "latency": 1.078,
+            "prompt_tokens": 15,
+            "completion_tokens": 1,
+            "total_tokens": 16,
+            "cost": 1.56e-05
+        },
+        {
+            "model": "qwen/qwen3-next-80b-a3b-instruct",
+            "latency": 0.527,
+            "prompt_tokens": 15,
+            "completion_tokens": 2,
+            "total_tokens": 17,
+            "cost": 3.55e-06
+        },
+        {
+            "model": "qwen/qwen3-next-80b-a3b-thinking",
+            "latency": 0.965,
+            "prompt_tokens": 15,
+            "completion_tokens": 107,
+            "total_tokens": 122,
+            "cost": 8.49225e-05
+        },
+        {
+            "model": "sao10k/l3-lunaris-8b",
+            "latency": 0.501,
+            "prompt_tokens": 17,
+            "completion_tokens": 1,
+            "total_tokens": 18,
+            "cost": 7.3e-07
+        },
+        {
+            "model": "sao10k/l3.1-70b-hanami-x1",
+            "latency": 1.434,
+            "prompt_tokens": 42,
+            "completion_tokens": 2,
+            "total_tokens": 44,
+            "cost": 0.000132
+        },
+        {
+            "model": "sao10k/l3.1-euryale-70b",
+            "latency": 0.518,
+            "prompt_tokens": 17,
+            "completion_tokens": 2,
+            "total_tokens": 19,
+            "cost": 1.615e-05
+        },
+        {
+            "model": "sao10k/l3.3-euryale-70b",
+            "latency": 24.778,
+            "prompt_tokens": 18,
+            "completion_tokens": 2,
+            "total_tokens": 20,
+            "cost": 1.32e-05
+        },
+        {
+            "model": "tencent/hunyuan-a13b-instruct",
+            "latency": 1.495,
+            "prompt_tokens": 15,
+            "completion_tokens": 2,
+            "total_tokens": 17,
+            "cost": 3.24e-06
+        },
+        {
+            "model": "tencent/hy3",
+            "latency": 2.982,
+            "prompt_tokens": 22,
+            "completion_tokens": 3,
+            "total_tokens": 25,
+            "cost": 4.82e-06
+        },
+        {
+            "model": "tencent/hy3-preview",
+            "latency": 3.035,
+            "prompt_tokens": 19,
+            "completion_tokens": 10,
+            "total_tokens": 29,
+            "cost": 3.297e-06
+        },
+        {
+            "model": "tencent/hy3:free",
+            "latency": 1.838,
+            "prompt_tokens": 19,
+            "completion_tokens": 10,
+            "total_tokens": 29,
+            "cost": 0
+        },
+        {
+            "model": "z-ai/glm-4.7",
+            "latency": 5.858,
+            "prompt_tokens": 12,
+            "completion_tokens": 198,
+            "total_tokens": 210,
+            "cost": 0.00039852
+        },
+        {
+            "model": "z-ai/glm-5.2",
+            "latency": 1.9,
+            "prompt_tokens": 19,
+            "completion_tokens": 10,
+            "total_tokens": 29,
+            "cost": 4.714e-05
+        }
+    ],
+    "vision": [
+        {
+            "model": "amazon/nova-2-lite-v1",
+            "latency": 1.147,
+            "prompt_tokens": 53,
+            "completion_tokens": 3,
+            "total_tokens": 56,
+            "cost": 2.34e-05
+        },
+        {
+            "model": "amazon/nova-lite-v1",
+            "latency": 0.794,
+            "prompt_tokens": 7,
+            "completion_tokens": 2,
+            "total_tokens": 9,
+            "cost": 9e-07
+        },
+        {
+            "model": "amazon/nova-premier-v1",
+            "latency": 0.794,
+            "prompt_tokens": 41,
+            "completion_tokens": 10,
+            "total_tokens": 51,
+            "cost": 0.0002275
+        },
+        {
+            "model": "amazon/nova-pro-v1",
+            "latency": 0.659,
+            "prompt_tokens": 7,
+            "completion_tokens": 3,
+            "total_tokens": 10,
+            "cost": 1.52e-05
+        },
+        {
+            "model": "anthracite-org/magnum-v4-72b",
+            "latency": 1.559,
+            "prompt_tokens": 15,
+            "completion_tokens": 2,
+            "total_tokens": 17,
+            "cost": 5.5e-05
+        },
+        {
+            "model": "anthropic/claude-3-haiku",
+            "latency": 0.57,
+            "prompt_tokens": 14,
+            "completion_tokens": 4,
+            "total_tokens": 18,
+            "cost": 8.5e-06
+        },
+        {
+            "model": "anthropic/claude-fable-5",
+            "latency": 4.744,
+            "prompt_tokens": 16,
+            "completion_tokens": 10,
+            "total_tokens": 26,
+            "cost": 0.00066
+        },
+        {
+            "model": "anthropic/claude-haiku-4.5",
+            "latency": 1.858,
+            "prompt_tokens": 14,
+            "completion_tokens": 4,
+            "total_tokens": 18,
+            "cost": 3.4e-05
+        },
+        {
+            "model": "anthropic/claude-opus-4",
+            "latency": 2.926,
+            "prompt_tokens": 14,
+            "completion_tokens": 4,
+            "total_tokens": 18,
+            "cost": 0.00051
+        },
+        {
+            "model": "anthropic/claude-opus-4.1",
+            "latency": 2.586,
+            "prompt_tokens": 14,
+            "completion_tokens": 4,
+            "total_tokens": 18,
+            "cost": 0.00051
+        },
+        {
+            "model": "anthropic/claude-opus-4.5",
+            "latency": 1.961,
+            "prompt_tokens": 14,
+            "completion_tokens": 4,
+            "total_tokens": 18,
+            "cost": 0.00017
+        },
+        {
+            "model": "anthropic/claude-opus-4.6",
+            "latency": 1.65,
+            "prompt_tokens": 14,
+            "completion_tokens": 4,
+            "total_tokens": 18,
+            "cost": 0.00017
+        },
+        {
+            "model": "anthropic/claude-opus-4.7",
+            "latency": 1.789,
+            "prompt_tokens": 21,
+            "completion_tokens": 6,
+            "total_tokens": 27,
+            "cost": 0.000255
+        },
+        {
+            "model": "anthropic/claude-opus-4.7-fast",
+            "latency": 1.033,
+            "prompt_tokens": 21,
+            "completion_tokens": 6,
+            "total_tokens": 27,
+            "cost": 0.00153
+        },
+        {
+            "model": "anthropic/claude-opus-4.8",
+            "latency": 2.215,
+            "prompt_tokens": 16,
+            "completion_tokens": 4,
+            "total_tokens": 20,
+            "cost": 0.00018
+        },
+        {
+            "model": "anthropic/claude-opus-4.8-fast",
+            "latency": 0.955,
+            "prompt_tokens": 16,
+            "completion_tokens": 4,
+            "total_tokens": 20,
+            "cost": 0.00036
+        },
+        {
+            "model": "anthropic/claude-sonnet-4",
+            "latency": 1.297,
+            "prompt_tokens": 14,
+            "completion_tokens": 4,
+            "total_tokens": 18,
+            "cost": 0.000102
+        },
+        {
+            "model": "anthropic/claude-sonnet-4.5",
+            "latency": 3.286,
+            "prompt_tokens": 14,
+            "completion_tokens": 4,
+            "total_tokens": 18,
+            "cost": 0.000102
+        },
+        {
+            "model": "anthropic/claude-sonnet-4.6",
+            "latency": 2.766,
+            "prompt_tokens": 14,
+            "completion_tokens": 4,
+            "total_tokens": 18,
+            "cost": 0.000102
+        },
+        {
+            "model": "anthropic/claude-sonnet-5",
+            "latency": 2.619,
+            "prompt_tokens": 16,
+            "completion_tokens": 4,
+            "total_tokens": 20,
+            "cost": 7.2e-05
+        },
+        {
+            "model": "baidu/ernie-4.5-vl-424b-a47b",
+            "latency": 1.567,
+            "prompt_tokens": 7,
+            "completion_tokens": 1,
+            "total_tokens": 8,
+            "cost": 4.19e-06
+        },
+        {
+            "model": "bytedance-seed/seed-1.6",
+            "latency": 1.668,
+            "prompt_tokens": 87,
+            "completion_tokens": 50,
+            "total_tokens": 137,
+            "cost": 0.00012175
+        },
+        {
+            "model": "bytedance-seed/seed-1.6-flash",
+            "latency": 1.466,
+            "prompt_tokens": 89,
+            "completion_tokens": 51,
+            "total_tokens": 140,
+            "cost": 2.1975e-05
+        },
+        {
+            "model": "bytedance-seed/seed-2.0-lite",
+            "latency": 3.79,
+            "prompt_tokens": 55,
+            "completion_tokens": 19,
+            "total_tokens": 74,
+            "cost": 5.175e-05
+        },
+        {
+            "model": "bytedance-seed/seed-2.0-mini",
+            "latency": 1.826,
+            "prompt_tokens": 55,
+            "completion_tokens": 49,
+            "total_tokens": 104,
+            "cost": 2.51e-05
+        },
+        {
+            "model": "bytedance/ui-tars-1.5-7b",
+            "latency": 0.497,
+            "prompt_tokens": 26,
+            "completion_tokens": 2,
+            "total_tokens": 28,
+            "cost": 3e-06
+        },
+        {
+            "model": "google/gemini-2.5-flash",
+            "latency": 0.974,
+            "prompt_tokens": 7,
+            "completion_tokens": 1,
+            "total_tokens": 8,
+            "cost": 4.6e-06
+        },
+        {
+            "model": "google/gemini-2.5-flash-lite",
+            "latency": 0.629,
+            "prompt_tokens": 7,
+            "completion_tokens": 1,
+            "total_tokens": 8,
+            "cost": 1.1e-06
+        },
+        {
+            "model": "google/gemini-2.5-pro",
+            "latency": 1.594,
+            "prompt_tokens": 7,
+            "completion_tokens": 7,
+            "total_tokens": 14,
+            "cost": 7.875e-05
+        },
+        {
+            "model": "google/gemini-2.5-pro-preview",
+            "latency": 2.159,
+            "prompt_tokens": 7,
+            "completion_tokens": 7,
+            "total_tokens": 14,
+            "cost": 7.875e-05
+        },
+        {
+            "model": "google/gemini-2.5-pro-preview-05-06",
+            "latency": 1.858,
+            "prompt_tokens": 7,
+            "completion_tokens": 7,
+            "total_tokens": 14,
+            "cost": 7.875e-05
+        },
+        {
+            "model": "google/gemini-3-flash-preview",
+            "latency": 1.727,
+            "prompt_tokens": 7,
+            "completion_tokens": 1,
+            "total_tokens": 8,
+            "cost": 6.5e-06
+        },
+        {
+            "model": "google/gemini-3.1-flash-lite",
+            "latency": 0.891,
+            "prompt_tokens": 7,
+            "completion_tokens": 1,
+            "total_tokens": 8,
+            "cost": 3.25e-06
+        },
+        {
+            "model": "google/gemini-3.1-flash-lite-preview",
+            "latency": 1.133,
+            "prompt_tokens": 8,
+            "completion_tokens": 1,
+            "total_tokens": 9,
+            "cost": 3.5e-06
+        },
+        {
+            "model": "google/gemini-3.1-pro-preview",
+            "latency": 2.889,
+            "prompt_tokens": 7,
+            "completion_tokens": 7,
+            "total_tokens": 14,
+            "cost": 9.8e-05
+        },
+        {
+            "model": "google/gemini-3.1-pro-preview-customtools",
+            "latency": 3.13,
+            "prompt_tokens": 8,
+            "completion_tokens": 7,
+            "total_tokens": 15,
+            "cost": 0.0001
+        },
+        {
+            "model": "google/gemini-3.5-flash",
+            "latency": 1.138,
+            "prompt_tokens": 7,
+            "completion_tokens": 1,
+            "total_tokens": 8,
+            "cost": 1.95e-05
+        },
+        {
+            "model": "google/gemma-3-12b-it",
+            "latency": 0.482,
+            "prompt_tokens": 16,
+            "completion_tokens": 2,
+            "total_tokens": 18,
+            "cost": 1.1e-06
+        },
+        {
+            "model": "google/gemma-3-27b-it",
+            "latency": 1.13,
+            "prompt_tokens": 16,
+            "completion_tokens": 5,
+            "total_tokens": 21,
+            "cost": 3.53e-06
+        },
+        {
+            "model": "google/gemma-3-4b-it",
+            "latency": 0.481,
+            "prompt_tokens": 16,
+            "completion_tokens": 3,
+            "total_tokens": 19,
+            "cost": 1.1e-06
+        },
+        {
+            "model": "google/gemma-4-26b-a4b-it",
+            "latency": 1.027,
+            "prompt_tokens": 20,
+            "completion_tokens": 2,
+            "total_tokens": 22,
+            "cost": 3.4e-06
+        },
+        {
+            "model": "google/gemma-4-26b-a4b-it:free",
+            "latency": 4.745,
+            "prompt_tokens": 8,
+            "completion_tokens": 1,
+            "total_tokens": 9,
+            "cost": 0
+        },
+        {
+            "model": "google/gemma-4-31b-it",
+            "latency": 0.86,
+            "prompt_tokens": 20,
+            "completion_tokens": 2,
+            "total_tokens": 22,
+            "cost": 3.36e-06
+        },
+        {
+            "model": "google/gemma-4-31b-it:free",
+            "latency": 1.493,
+            "prompt_tokens": 8,
+            "completion_tokens": 1,
+            "total_tokens": 9,
+            "cost": 0
+        },
+        {
+            "model": "meta-llama/llama-3.2-11b-vision-instruct",
+            "latency": 0.452,
+            "prompt_tokens": 17,
+            "completion_tokens": 2,
+            "total_tokens": 19,
+            "cost": 6.555e-06
+        },
+        {
+            "model": "meta-llama/llama-4-maverick",
+            "latency": 2.299,
+            "prompt_tokens": 18,
+            "completion_tokens": 2,
+            "total_tokens": 20,
+            "cost": 8.6e-06
+        },
+        {
+            "model": "meta-llama/llama-4-scout",
+            "latency": 0.674,
+            "prompt_tokens": 17,
+            "completion_tokens": 2,
+            "total_tokens": 19,
+            "cost": 4.24e-06
+        },
+        {
+            "model": "meta-llama/llama-guard-4-12b",
+            "latency": 0.54,
+            "prompt_tokens": 211,
+            "completion_tokens": 3,
+            "total_tokens": 214,
+            "cost": 3.852e-05
+        },
+        {
+            "model": "minimax/minimax-01",
+            "latency": 1.96,
+            "prompt_tokens": 718,
+            "completion_tokens": 1,
+            "total_tokens": 719,
+            "cost": 0.0001447
+        },
+        {
+            "model": "minimax/minimax-m3",
+            "latency": 1.331,
+            "prompt_tokens": 183,
+            "completion_tokens": 10,
+            "total_tokens": 193,
+            "cost": 3.954e-05
+        },
+        {
+            "model": "mistralai/codestral-2508",
+            "latency": 1.129,
+            "prompt_tokens": 10,
+            "completion_tokens": 3,
+            "total_tokens": 13,
+            "cost": 5.7e-06
+        },
+        {
+            "model": "mistralai/devstral-2512",
+            "latency": 1.091,
+            "prompt_tokens": 10,
+            "completion_tokens": 2,
+            "total_tokens": 12,
+            "cost": 8e-06
+        },
+        {
+            "model": "mistralai/ministral-14b-2512",
+            "latency": 1.117,
+            "prompt_tokens": 10,
+            "completion_tokens": 2,
+            "total_tokens": 12,
+            "cost": 4.2e-06
+        },
+        {
+            "model": "mistralai/ministral-3b-2512",
+            "latency": 0.75,
+            "prompt_tokens": 10,
+            "completion_tokens": 2,
+            "total_tokens": 12,
+            "cost": 1.2e-06
+        },
+        {
+            "model": "mistralai/ministral-8b-2512",
+            "latency": 0.502,
+            "prompt_tokens": 10,
+            "completion_tokens": 2,
+            "total_tokens": 12,
+            "cost": 1.8e-06
+        },
+        {
+            "model": "mistralai/mistral-large",
+            "latency": 0.652,
+            "prompt_tokens": 10,
+            "completion_tokens": 2,
+            "total_tokens": 12,
+            "cost": 3.2e-05
+        },
+        {
+            "model": "mistralai/mistral-large-2407",
+            "latency": 1.415,
+            "prompt_tokens": 10,
+            "completion_tokens": 2,
+            "total_tokens": 12,
+            "cost": 3.2e-05
+        },
+        {
+            "model": "mistralai/mistral-large-2512",
+            "latency": 3.995,
+            "prompt_tokens": 10,
+            "completion_tokens": 2,
+            "total_tokens": 12,
+            "cost": 8e-06
+        },
+        {
+            "model": "mistralai/mistral-medium-3",
+            "latency": 0.444,
+            "prompt_tokens": 10,
+            "completion_tokens": 2,
+            "total_tokens": 12,
+            "cost": 8e-06
+        },
+        {
+            "model": "mistralai/mistral-medium-3-5",
+            "latency": 0.842,
+            "prompt_tokens": 22,
+            "completion_tokens": 2,
+            "total_tokens": 24,
+            "cost": 4.8e-05
+        },
+        {
+            "model": "mistralai/mistral-medium-3.1",
+            "latency": 0.628,
+            "prompt_tokens": 10,
+            "completion_tokens": 2,
+            "total_tokens": 12,
+            "cost": 8e-06
+        },
+        {
+            "model": "mistralai/mistral-saba",
+            "latency": 0.623,
+            "prompt_tokens": 22,
+            "completion_tokens": 2,
+            "total_tokens": 24,
+            "cost": 5.6e-06
+        },
+        {
+            "model": "mistralai/mistral-small-2603",
+            "latency": 0.818,
+            "prompt_tokens": 22,
+            "completion_tokens": 2,
+            "total_tokens": 24,
+            "cost": 4.5e-06
+        },
+        {
+            "model": "mistralai/mistral-small-3.1-24b-instruct",
+            "latency": 0.745,
+            "prompt_tokens": 10,
+            "completion_tokens": 2,
+            "total_tokens": 12,
+            "cost": 4.62e-06
+        },
+        {
+            "model": "mistralai/mistral-small-3.2-24b-instruct",
+            "latency": 0.551,
+            "prompt_tokens": 10,
+            "completion_tokens": 2,
+            "total_tokens": 12,
+            "cost": 1.5e-06
+        },
+        {
+            "model": "mistralai/mixtral-8x22b-instruct",
+            "latency": 0.462,
+            "prompt_tokens": 22,
+            "completion_tokens": 2,
+            "total_tokens": 24,
+            "cost": 5.6e-05
+        },
+        {
+            "model": "moonshotai/kimi-k2.5",
+            "latency": 2.676,
+            "prompt_tokens": 14,
+            "completion_tokens": 84,
+            "total_tokens": 98,
+            "cost": 0.00021686
+        },
+        {
+            "model": "moonshotai/kimi-k2.6",
+            "latency": 1.124,
+            "prompt_tokens": 15,
+            "completion_tokens": 10,
+            "total_tokens": 25,
+            "cost": 4.625e-05
+        },
+        {
+            "model": "moonshotai/kimi-k2.7-code",
+            "latency": 0.823,
+            "prompt_tokens": 15,
+            "completion_tokens": 10,
+            "total_tokens": 25,
+            "cost": 5.41e-05
+        },
+        {
+            "model": "nex-agi/nex-n2-mini",
+            "latency": 25.369,
+            "prompt_tokens": 16,
+            "completion_tokens": 5,
+            "total_tokens": 21,
+            "cost": 9e-07
+        },
+        {
+            "model": "nex-agi/nex-n2-pro",
+            "latency": 11.661,
+            "prompt_tokens": 16,
+            "completion_tokens": 5,
+            "total_tokens": 21,
+            "cost": 2.05e-05
+        },
+        {
+            "model": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+            "latency": 0.402,
+            "prompt_tokens": 23,
+            "completion_tokens": 10,
+            "total_tokens": 33,
+            "cost": 0
+        },
+        {
+            "model": "nvidia/nemotron-nano-12b-v2-vl:free",
+            "latency": 121.404,
+            "prompt_tokens": null,
+            "completion_tokens": null,
+            "total_tokens": null,
+            "cost": null
+        },
+        {
+            "model": "openai/gpt-4-turbo",
+            "latency": 1.285,
+            "prompt_tokens": 14,
+            "completion_tokens": 1,
+            "total_tokens": 15,
+            "cost": 0.00017
+        },
+        {
+            "model": "openai/gpt-4o",
+            "latency": 1.115,
+            "prompt_tokens": 14,
+            "completion_tokens": 1,
+            "total_tokens": 15,
+            "cost": 4.5e-05
+        },
+        {
+            "model": "openai/gpt-4o-2024-05-13",
+            "latency": 1.815,
+            "prompt_tokens": 14,
+            "completion_tokens": 2,
+            "total_tokens": 16,
+            "cost": 0.0001
+        },
+        {
+            "model": "openai/gpt-4o-2024-08-06",
+            "latency": 0.975,
+            "prompt_tokens": 14,
+            "completion_tokens": 1,
+            "total_tokens": 15,
+            "cost": 4.5e-05
+        },
+        {
+            "model": "openai/gpt-4o-2024-11-20",
+            "latency": 0.851,
+            "prompt_tokens": 14,
+            "completion_tokens": 1,
+            "total_tokens": 15,
+            "cost": 4.5e-05
+        },
+        {
+            "model": "openai/gpt-4o-mini",
+            "latency": 0.963,
+            "prompt_tokens": 14,
+            "completion_tokens": 2,
+            "total_tokens": 16,
+            "cost": 3.3e-06
+        },
+        {
+            "model": "openai/gpt-4o-mini-2024-07-18",
+            "latency": 0.705,
+            "prompt_tokens": 14,
+            "completion_tokens": 1,
+            "total_tokens": 15,
+            "cost": 2.7e-06
+        },
+        {
+            "model": "openrouter/free",
+            "latency": 1.061,
+            "prompt_tokens": 23,
+            "completion_tokens": 10,
+            "total_tokens": 33,
+            "cost": 0
+        },
+        {
+            "model": "perceptron/perceptron-mk1",
+            "latency": 0.848,
+            "prompt_tokens": 13,
+            "completion_tokens": 5,
+            "total_tokens": 18,
+            "cost": 9.45e-06
+        },
+        {
+            "model": "qwen/qwen2.5-vl-72b-instruct",
+            "latency": 3.289,
+            "prompt_tokens": 21,
+            "completion_tokens": 2,
+            "total_tokens": 23,
+            "cost": 1.88e-05
+        },
+        {
+            "model": "qwen/qwen3-vl-235b-a22b-instruct",
+            "latency": 0.942,
+            "prompt_tokens": 15,
+            "completion_tokens": 2,
+            "total_tokens": 17,
+            "cost": 6.95e-06
+        },
+        {
+            "model": "qwen/qwen3-vl-235b-a22b-thinking",
+            "latency": 2.779,
+            "prompt_tokens": 17,
+            "completion_tokens": 155,
+            "total_tokens": 172,
+            "cost": 0.00040742
+        },
+        {
+            "model": "qwen/qwen3-vl-30b-a3b-instruct",
+            "latency": 1.787,
+            "prompt_tokens": 15,
+            "completion_tokens": 2,
+            "total_tokens": 17,
+            "cost": 4.4e-06
+        },
+        {
+            "model": "qwen/qwen3-vl-30b-a3b-thinking",
+            "latency": 2.825,
+            "prompt_tokens": 17,
+            "completion_tokens": 167,
+            "total_tokens": 184,
+            "cost": 0.00017193
+        },
+        {
+            "model": "qwen/qwen3-vl-32b-instruct",
+            "latency": 0.361,
+            "prompt_tokens": 15,
+            "completion_tokens": 2,
+            "total_tokens": 17,
+            "cost": 2.392e-06
+        },
+        {
+            "model": "qwen/qwen3-vl-8b-instruct",
+            "latency": 0.294,
+            "prompt_tokens": 15,
+            "completion_tokens": 2,
+            "total_tokens": 17,
+            "cost": 2.665e-06
+        },
+        {
+            "model": "qwen/qwen3-vl-8b-thinking",
+            "latency": 1.327,
+            "prompt_tokens": 17,
+            "completion_tokens": 145,
+            "total_tokens": 162,
+            "cost": 0.000199914
+        },
+        {
+            "model": "qwen/qwen3.5-122b-a10b",
+            "latency": 1.621,
+            "prompt_tokens": 17,
+            "completion_tokens": 10,
+            "total_tokens": 27,
+            "cost": 2.522e-05
+        },
+        {
+            "model": "qwen/qwen3.5-27b",
+            "latency": 5.977,
+            "prompt_tokens": 17,
+            "completion_tokens": 101,
+            "total_tokens": 118,
+            "cost": 0.0002475
+        },
+        {
+            "model": "qwen/qwen3.5-35b-a3b",
+            "latency": 0.513,
+            "prompt_tokens": 17,
+            "completion_tokens": 10,
+            "total_tokens": 27,
+            "cost": 1.675e-05
+        },
+        {
+            "model": "qwen/qwen3.5-397b-a17b",
+            "latency": 2.974,
+            "prompt_tokens": 17,
+            "completion_tokens": 10,
+            "total_tokens": 27,
+            "cost": 4.435e-05
+        },
+        {
+            "model": "qwen/qwen3.5-9b",
+            "latency": 1.609,
+            "prompt_tokens": 17,
+            "completion_tokens": 10,
+            "total_tokens": 27,
+            "cost": 3.2e-06
+        },
+        {
+            "model": "qwen/qwen3.5-flash-02-23",
+            "latency": 1.003,
+            "prompt_tokens": 17,
+            "completion_tokens": 141,
+            "total_tokens": 158,
+            "cost": 3.7765e-05
+        },
+        {
+            "model": "qwen/qwen3.5-plus-02-15",
+            "latency": 2.769,
+            "prompt_tokens": 17,
+            "completion_tokens": 101,
+            "total_tokens": 118,
+            "cost": 0.00016198
+        },
+        {
+            "model": "qwen/qwen3.5-plus-20260420",
+            "latency": 3.744,
+            "prompt_tokens": 17,
+            "completion_tokens": 158,
+            "total_tokens": 175,
+            "cost": 0.0002895
+        },
+        {
+            "model": "qwen/qwen3.6-27b",
+            "latency": 1.452,
+            "prompt_tokens": 17,
+            "completion_tokens": 10,
+            "total_tokens": 27,
+            "cost": 2.51e-05
+        },
+        {
+            "model": "qwen/qwen3.6-35b-a3b",
+            "latency": 0.41,
+            "prompt_tokens": 17,
+            "completion_tokens": 10,
+            "total_tokens": 27,
+            "cost": 1.675e-05
+        },
+        {
+            "model": "qwen/qwen3.6-flash",
+            "latency": 9.288,
+            "prompt_tokens": 17,
+            "completion_tokens": 187,
+            "total_tokens": 204,
+            "cost": 0.0002135625
+        },
+        {
+            "model": "qwen/qwen3.6-plus",
+            "latency": 4.097,
+            "prompt_tokens": 17,
+            "completion_tokens": 180,
+            "total_tokens": 197,
+            "cost": 0.000356525
+        },
+        {
+            "model": "qwen/qwen3.7-plus",
+            "latency": 5.219,
+            "prompt_tokens": 17,
+            "completion_tokens": 144,
+            "total_tokens": 161,
+            "cost": 0.00018976
+        },
+        {
+            "model": "rekaai/reka-edge",
+            "latency": 0.942,
+            "prompt_tokens": 12,
+            "completion_tokens": 3,
+            "total_tokens": 15,
+            "cost": 1.5e-06
+        },
+        {
+            "model": "stepfun/step-3.7-flash",
+            "latency": 4.01,
+            "prompt_tokens": 19,
+            "completion_tokens": 10,
+            "total_tokens": 29,
+            "cost": 1.53e-05
+        },
+        {
+            "model": "x-ai/grok-4.20",
+            "latency": 0.65,
+            "prompt_tokens": 190,
+            "completion_tokens": 1,
+            "total_tokens": 191,
+            "cost": 0.0001056
+        },
+        {
+            "model": "x-ai/grok-4.20-multi-agent",
+            "latency": 2.098,
+            "prompt_tokens": 3879,
+            "completion_tokens": 886,
+            "total_tokens": 4765,
+            "cost": 0.00303175
+        },
+        {
+            "model": "x-ai/grok-4.3",
+            "latency": 1.623,
+            "prompt_tokens": 198,
+            "completion_tokens": 91,
+            "total_tokens": 289,
+            "cost": 0.0002734
+        },
+        {
+            "model": "x-ai/grok-4.5",
+            "latency": 2.213,
+            "prompt_tokens": 213,
+            "completion_tokens": 233,
+            "total_tokens": 446,
+            "cost": 0.001632
+        },
+        {
+            "model": "x-ai/grok-build-0.1",
+            "latency": 2.409,
+            "prompt_tokens": 192,
+            "completion_tokens": 194,
+            "total_tokens": 386,
+            "cost": 0.0004776
+        },
+        {
+            "model": "xiaomi/mimo-v2.5",
+            "latency": 2.989,
+            "prompt_tokens": 254,
+            "completion_tokens": 10,
+            "total_tokens": 264,
+            "cost": 1.20176e-05
+        },
+        {
+            "model": "z-ai/glm-4.5v",
+            "latency": 2.042,
+            "prompt_tokens": 13,
+            "completion_tokens": 10,
+            "total_tokens": 23,
+            "cost": 1.992e-05
+        },
+        {
+            "model": "z-ai/glm-4.6v",
+            "latency": 1.433,
+            "prompt_tokens": 13,
+            "completion_tokens": 10,
+            "total_tokens": 23,
+            "cost": 1.19e-05
+        },
+        {
+            "model": "z-ai/glm-5v-turbo",
+            "latency": 1.337,
+            "prompt_tokens": 12,
+            "completion_tokens": 10,
+            "total_tokens": 22,
+            "cost": 5.152e-05
+        },
+        {
+            "model": "~anthropic/claude-fable-latest",
+            "latency": 4.819,
+            "prompt_tokens": 16,
+            "completion_tokens": 10,
+            "total_tokens": 26,
+            "cost": 0.00066
+        },
+        {
+            "model": "~anthropic/claude-haiku-latest",
+            "latency": 2.729,
+            "prompt_tokens": 14,
+            "completion_tokens": 4,
+            "total_tokens": 18,
+            "cost": 3.4e-05
+        },
+        {
+            "model": "~anthropic/claude-opus-latest",
+            "latency": 1.619,
+            "prompt_tokens": 16,
+            "completion_tokens": 4,
+            "total_tokens": 20,
+            "cost": 0.00018
+        },
+        {
+            "model": "~anthropic/claude-sonnet-latest",
+            "latency": 2.164,
+            "prompt_tokens": 16,
+            "completion_tokens": 4,
+            "total_tokens": 20,
+            "cost": 7.2e-05
+        },
+        {
+            "model": "~google/gemini-flash-latest",
+            "latency": 1.144,
+            "prompt_tokens": 7,
+            "completion_tokens": 1,
+            "total_tokens": 8,
+            "cost": 1.95e-05
+        },
+        {
+            "model": "~google/gemini-pro-latest",
+            "latency": 2.274,
+            "prompt_tokens": 7,
+            "completion_tokens": 7,
+            "total_tokens": 14,
+            "cost": 9.8e-05
+        },
+        {
+            "model": "~moonshotai/kimi-latest",
+            "latency": 2.166,
+            "prompt_tokens": 14,
+            "completion_tokens": 37,
+            "total_tokens": 51,
+            "cost": 0.0001613
+        },
+        {
+            "model": "~x-ai/grok-latest",
+            "latency": 1.771,
+            "prompt_tokens": 213,
+            "completion_tokens": 104,
+            "total_tokens": 317,
+            "cost": 0.000858
+        }
+    ]
+}
