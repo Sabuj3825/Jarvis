@@ -616,7 +616,7 @@ if __name__ == "__main__":
                 task = TaskClassifier.classify(intent)
                 
                 # Step 5: Execution Planner
-                plan = ExecutionPlanner.plan(processed_input, intent, task)
+                plan = ExecutionPlanner.plan(processed_input, intent)
 
                 knowledge_ctx = {}
                 verified_context = ""
