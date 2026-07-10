@@ -17,6 +17,13 @@ import requests
 
 
 class GeminiProvider:
+    # ── Plugin metadata — auto-discovered by engine/provider_registry.py ──────
+    _PROVIDER_META = {
+        "name":         "gemini",
+        "capabilities": ["chat", "coding", "reasoning", "vision", "web_summary"],
+        "is_local":     False,
+        "priority":     5,   # cloud fallback
+    }
     """
     Wraps the Gemini REST API with built-in rate guard.
 

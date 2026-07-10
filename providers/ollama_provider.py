@@ -22,6 +22,13 @@ _SYSTEM_PROMPT = (
 
 
 class OllamaProvider:
+    # ── Plugin metadata — auto-discovered by engine/provider_registry.py ──────
+    _PROVIDER_META = {
+        "name":         "ollama",
+        "capabilities": ["chat", "coding", "reasoning", "web_summary"],
+        "is_local":     True,
+        "priority":     10,   # highest priority — always tried first (Local-First)
+    }
     """
     Wraps the locally running Ollama LLM.
 

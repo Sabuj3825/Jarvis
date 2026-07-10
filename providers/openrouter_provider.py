@@ -36,6 +36,13 @@ _DEFAULT_SYSTEM = (
 
 
 class OpenRouterProvider:
+    # ── Plugin metadata — auto-discovered by engine/provider_registry.py ──────
+    _PROVIDER_META = {
+        "name":         "openrouter",
+        "capabilities": ["chat", "coding", "reasoning", "vision"],
+        "is_local":     False,
+        "priority":     3,   # last resort cloud option
+    }
     """
     Calls OpenRouter models discovered dynamically from openrouter_models.json.
 

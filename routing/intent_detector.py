@@ -106,6 +106,10 @@ _CODING_PHRASES = frozenset([
     "html page", "css style", "sql query", "regex for",
     "how to code", "how to program", "how to implement",
     "give me the code", "show me the code",
+    # Extended — catches 'write a python function', 'python function to'
+    "python function", "python script", "python program",
+    "javascript function", "java function", "a function to",
+    "a program to", "a script to",
 ])
 
 _REASONING_PHRASES = frozenset([
@@ -221,7 +225,11 @@ class IntentDetector:
         q = query.lower().strip()
 
         # ── Tier 1: Single-token conversational bypass ────────────────────────
+        # NOTE: we check LOCAL_EXACT FIRST before the length bypass,
+        # so single-word commands like 'time', 'stop', 'date' are not swallowed.
         bare = q.strip("'\".,!?;:")
+        if bare in _LOCAL_EXACT:
+            return IntentType.LOCAL_COMMAND
         if bare in _CHAT_TOKENS:
             return IntentType.CHAT
         if len(q.split()) <= 1 and len(q) <= 4:

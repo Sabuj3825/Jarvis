@@ -3,24 +3,32 @@ providers/manager.py
 =====================
 ProviderManager — the single entry point for all AI calls in JARVIS.
 
-Implements fully automatic failover chains for every task type:
+v7: Delegates to engine.ai_planner.AIPlan which dynamically queries the
+    ProviderRegistry for the best available provider at runtime.
 
-  CHAT       : Ollama → Gemini → OpenRouter (chat)
-  CODING     : OpenRouter (chat) → Gemini → Ollama
-  REASONING  : OpenRouter (reasoning) → Gemini → Ollama
-  VISION     : OpenRouter (vision) → Gemini
-  WEB_SUMMARY: Ollama → Gemini → OpenRouter → raw data fallback
+Failover is now fully dynamic:
+  - Local providers are always tried first (Local-First policy)
+  - Order is determined by _PROVIDER_META.priority
+  - Adding a new provider requires ZERO changes here
 
-The caller never needs to know which provider actually answered.
+The caller (ai_router.py) never needs to know which provider answered.
 """
 
 from __future__ import annotations
 
 from colorama import Fore
 
-from .ollama_provider import OllamaProvider
-from .gemini_provider import GeminiProvider
+from .ollama_provider    import OllamaProvider
+from .gemini_provider    import GeminiProvider
 from .openrouter_provider import OpenRouterProvider
+
+# ── Engine layer (dynamic planner) ────────────────────────────────────────────
+try:
+    from engine.ai_planner       import AIPlan
+    from engine.provider_registry import ProviderRegistry
+    _ENGINE_AVAILABLE = True
+except ImportError:
+    _ENGINE_AVAILABLE = False
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Quality filter — phrases that indicate an evasive / useless response
@@ -52,12 +60,13 @@ class ProviderManager:
     """
     Unified AI facade with automatic provider selection and failover.
 
+    v7: Uses the dynamic AIPlan engine when available.
+        Falls back to direct provider calls when engine/ is not importable.
+
     Instantiate once per user turn:
         mgr = ProviderManager(config)
         reply = mgr.chat("Hello")
         reply = mgr.coding("Write a bubble sort in Python")
-        reply = mgr.reasoning("Compare async vs sync programming")
-        reply = mgr.web_summary("AI news", {"web_data": "...", "wiki_data": "..."})
     """
 
     def __init__(self, config):
@@ -66,18 +75,36 @@ class ProviderManager:
         self.gemini     = GeminiProvider(config)
         self.openrouter = OpenRouterProvider(config)
 
+        # Seed the provider registry once per ProviderManager instance
+        if _ENGINE_AVAILABLE:
+            if not ProviderRegistry.all_providers():
+                ProviderRegistry.register(self.ollama)
+                ProviderRegistry.register(self.gemini)
+                ProviderRegistry.register(self.openrouter)
+
     # ─────────────────────────────────────────────────────────────────────────
-    # CHAT — Ollama → Gemini → OpenRouter chat
+    # CHAT
     # ─────────────────────────────────────────────────────────────────────────
     def chat(self, prompt: str, history: list | None = None) -> str:
         """General conversational response with chat-history context."""
-        print(Fore.CYAN + "🧠 [Manager]: CHAT pipeline — Ollama → Gemini → OpenRouter")
+        print(Fore.CYAN + "🧠 [Manager]: CHAT pipeline (dynamic)")
 
+        if _ENGINE_AVAILABLE:
+            reply, provider, err = AIPlan.execute(
+                task="chat", prompt=prompt, config=self._config, history=history
+            )
+            if reply:
+                return reply
+            print(Fore.RED + f"❌ [Manager]: All CHAT providers failed — {err}")
+            return "❌ All AI providers are currently unavailable."
+
+        # ── Legacy fallback ───────────────────────────────────────────────
+        print(Fore.CYAN + "   (legacy: Ollama → Gemini → OpenRouter)")
         r, err = self.ollama.complete(prompt, history=history)
         if r:
-            print(Fore.GREEN + "✅ [Manager]: Ollama answered.")
+            print(Fore.GREEN + "✅ Ollama answered.")
             return r
-        print(Fore.YELLOW + f"⚠️  [Manager]: Ollama — {err}")
+        print(Fore.YELLOW + f"⚠️  Ollama — {err}")
 
         r, err = self.gemini.complete(
             prompt,
@@ -87,121 +114,122 @@ class ProviderManager:
             ),
         )
         if r:
-            print(Fore.GREEN + "✅ [Manager]: Gemini answered.")
+            print(Fore.GREEN + "✅ Gemini answered.")
             return r
-        print(Fore.YELLOW + f"⚠️  [Manager]: Gemini — {err}")
+        print(Fore.YELLOW + f"⚠️  Gemini — {err}")
 
         r, err = self.openrouter.complete(prompt, category="chat")
         if r:
-            print(Fore.GREEN + "✅ [Manager]: OpenRouter (chat) answered.")
+            print(Fore.GREEN + "✅ OpenRouter answered.")
             return r
-        print(Fore.RED + f"❌ [Manager]: All CHAT providers failed — {err}")
+        print(Fore.RED + f"❌ All CHAT providers failed — {err}")
         return "❌ All AI providers are currently unavailable."
 
     # ─────────────────────────────────────────────────────────────────────────
-    # CODING — OpenRouter → Gemini → Ollama
+    # CODING
     # ─────────────────────────────────────────────────────────────────────────
     def coding(self, prompt: str) -> str:
         """Code generation and debugging — best model tried first."""
-        print(Fore.CYAN + "💻 [Manager]: CODING pipeline — OpenRouter → Gemini → Ollama")
+        print(Fore.CYAN + "💻 [Manager]: CODING pipeline (dynamic)")
 
+        if _ENGINE_AVAILABLE:
+            reply, provider, err = AIPlan.execute(
+                task="coding", prompt=prompt, config=self._config
+            )
+            if reply:
+                return reply
+            print(Fore.RED + f"❌ [Manager]: All CODING providers failed — {err}")
+            return "❌ All coding AI providers are currently unavailable."
+
+        # ── Legacy fallback ───────────────────────────────────────────────
         sys_p = (
             f"You are Jarvis, an expert coding assistant created by {self._config.DEVELOPER_ALIAS}. "
-            "Write clean, well-commented, production-ready code. "
-            "After the code block, briefly explain what it does."
+            "Write clean, well-commented, production-ready code."
         )
-
+        print(Fore.CYAN + "   (legacy: OpenRouter → Gemini → Ollama)")
         r, err = self.openrouter.complete(prompt, category="chat", system_prompt=sys_p)
         if r:
-            print(Fore.GREEN + "✅ [Manager]: OpenRouter (coding) answered.")
             return r
-        print(Fore.YELLOW + f"⚠️  [Manager]: OpenRouter coding — {err}")
-
         r, err = self.gemini.complete(prompt, system_prefix=sys_p)
         if r:
-            print(Fore.GREEN + "✅ [Manager]: Gemini (coding) answered.")
             return r
-        print(Fore.YELLOW + f"⚠️  [Manager]: Gemini coding — {err}")
-
         r, err = self.ollama.complete(prompt)
         if r:
-            print(Fore.GREEN + "✅ [Manager]: Ollama (coding) answered.")
             return r
-
-        print(Fore.RED + "❌ [Manager]: All CODING providers failed.")
         return "❌ All coding AI providers are currently unavailable."
 
     # ─────────────────────────────────────────────────────────────────────────
-    # REASONING — OpenRouter reasoning → Gemini → Ollama
+    # REASONING
     # ─────────────────────────────────────────────────────────────────────────
     def reasoning(self, prompt: str) -> str:
         """Analytical, multi-step reasoning — dedicated reasoning models first."""
-        print(Fore.CYAN + "🧮 [Manager]: REASONING pipeline — OpenRouter reasoning → Gemini → Ollama")
+        print(Fore.CYAN + "🧮 [Manager]: REASONING pipeline (dynamic)")
 
+        if _ENGINE_AVAILABLE:
+            reply, provider, err = AIPlan.execute(
+                task="reasoning", prompt=prompt, config=self._config
+            )
+            if reply:
+                return reply
+            print(Fore.RED + f"❌ [Manager]: All REASONING providers failed — {err}")
+            return "❌ All reasoning AI providers are currently unavailable."
+
+        # ── Legacy fallback ───────────────────────────────────────────────
         sys_p = (
             f"You are Jarvis, a precise analytical assistant created by {self._config.DEVELOPER_ALIAS}. "
-            "Think step-by-step. Show your reasoning. Use numbered points or headings."
+            "Think step-by-step."
         )
-
+        print(Fore.CYAN + "   (legacy: OpenRouter → Gemini → Ollama)")
         r, err = self.openrouter.complete(prompt, category="reasoning", system_prompt=sys_p)
         if r:
-            print(Fore.GREEN + "✅ [Manager]: OpenRouter (reasoning) answered.")
             return r
-        print(Fore.YELLOW + f"⚠️  [Manager]: OpenRouter reasoning — {err}")
-
         r, err = self.gemini.complete(prompt, system_prefix=sys_p)
         if r:
-            print(Fore.GREEN + "✅ [Manager]: Gemini (reasoning) answered.")
             return r
-        print(Fore.YELLOW + f"⚠️  [Manager]: Gemini reasoning — {err}")
-
         r, err = self.ollama.complete(prompt)
         if r:
-            print(Fore.GREEN + "✅ [Manager]: Ollama (reasoning) answered.")
             return r
-
-        print(Fore.RED + "❌ [Manager]: All REASONING providers failed.")
         return "❌ All reasoning AI providers are currently unavailable."
 
     # ─────────────────────────────────────────────────────────────────────────
-    # VISION — OpenRouter vision → Gemini
+    # VISION
     # ─────────────────────────────────────────────────────────────────────────
     def vision(self, prompt: str) -> str:
         """Image/visual analysis — vision-capable models only."""
-        print(Fore.CYAN + "👁️  [Manager]: VISION pipeline — OpenRouter vision → Gemini")
+        print(Fore.CYAN + "👁️  [Manager]: VISION pipeline (dynamic)")
 
+        if _ENGINE_AVAILABLE:
+            reply, provider, err = AIPlan.execute(
+                task="vision", prompt=prompt, config=self._config
+            )
+            if reply:
+                return reply
+            print(Fore.RED + f"❌ [Manager]: All VISION providers failed — {err}")
+            return "❌ Vision capabilities are currently unavailable."
+
+        # ── Legacy fallback ───────────────────────────────────────────────
         sys_p = (
             f"You are Jarvis, a vision-capable assistant created by {self._config.DEVELOPER_ALIAS}. "
             "Describe and analyze images in detail."
         )
-
+        print(Fore.CYAN + "   (legacy: OpenRouter vision → Gemini)")
         r, err = self.openrouter.complete(prompt, category="vision", system_prompt=sys_p)
         if r:
-            print(Fore.GREEN + "✅ [Manager]: OpenRouter (vision) answered.")
             return r
-        print(Fore.YELLOW + f"⚠️  [Manager]: OpenRouter vision — {err}")
-
         r, err = self.gemini.complete(prompt, system_prefix=sys_p)
         if r:
-            print(Fore.GREEN + "✅ [Manager]: Gemini (vision) answered.")
             return r
-
-        print(Fore.RED + "❌ [Manager]: All VISION providers failed.")
         return "❌ Vision capabilities are currently unavailable."
 
     # ─────────────────────────────────────────────────────────────────────────
-    # WEB_SUMMARY — Ollama → Gemini → OpenRouter → raw data
+    # WEB_SUMMARY
     # ─────────────────────────────────────────────────────────────────────────
     def web_summary(self, prompt: str, knowledge_ctx: dict) -> str:
         """
         Synthesise an answer from pre-collected web / Wikipedia data.
         Falls back through all providers, then serves raw data if all fail.
-
-        knowledge_ctx keys used:
-            web_data  : str | None
-            wiki_data : str | None
         """
-        print(Fore.CYAN + "🌐 [Manager]: WEB SUMMARY pipeline — Ollama → Gemini → OpenRouter → raw")
+        print(Fore.CYAN + "🌐 [Manager]: WEB SUMMARY pipeline (dynamic)")
 
         # Build the enriched prompt
         parts: list[str] = []
@@ -212,45 +240,46 @@ class ProviderManager:
 
         if parts:
             context = "\n\n".join(parts)
-            synthesise_prompt = (
+            enriched_prompt = (
                 f"You are Jarvis, a terminal assistant created by {self._config.DEVELOPER_ALIAS}. "
                 f"Answer ONLY using the data below. Be direct and concise.\n\n"
-                f"{context}\n\n"
-                f"Query: {prompt}"
+                f"{context}\n\nQuery: {prompt}"
             )
         else:
-            synthesise_prompt = prompt
+            enriched_prompt = prompt
 
-        # Ollama (fast, local — quality check applied)
-        r, err = self.ollama.complete(synthesise_prompt)
-        if r and _is_quality(r):
-            print(Fore.GREEN + "✅ [Manager]: Ollama summarised knowledge context.")
-            return r
-        if r:
-            print(Fore.YELLOW + "⚠️  [Manager]: Ollama gave low-quality summary, escalating...")
+        if _ENGINE_AVAILABLE:
+            reply, provider, err = AIPlan.execute(
+                task="web_summary", prompt=enriched_prompt, config=self._config
+            )
+            if reply and _is_quality(reply):
+                return reply
+            if reply:
+                print(Fore.YELLOW + "⚠️  Low-quality summary — serving raw data instead.")
         else:
-            print(Fore.YELLOW + f"⚠️  [Manager]: Ollama — {err}")
-
-        # Gemini
-        r, err = self.gemini.complete(synthesise_prompt)
-        if r:
-            print(Fore.GREEN + "✅ [Manager]: Gemini summarised knowledge context.")
-            return r
-        print(Fore.YELLOW + f"⚠️  [Manager]: Gemini — {err}")
-
-        # OpenRouter
-        r, err = self.openrouter.complete(synthesise_prompt, category="chat")
-        if r:
-            print(Fore.GREEN + "✅ [Manager]: OpenRouter summarised knowledge context.")
-            return r
-        print(Fore.RED + f"❌ [Manager]: All summary providers failed.")
+            # ── Legacy fallback ────────────────────────────────────────────
+            print(Fore.CYAN + "   (legacy: Ollama → Gemini → OpenRouter → raw)")
+            r, err = self.ollama.complete(enriched_prompt)
+            if r and _is_quality(r):
+                print(Fore.GREEN + "✅ Ollama summarised.")
+                return r
+            r, err = self.gemini.complete(enriched_prompt)
+            if r:
+                print(Fore.GREEN + "✅ Gemini summarised.")
+                return r
+            r, err = self.openrouter.complete(enriched_prompt, category="chat")
+            if r:
+                print(Fore.GREEN + "✅ OpenRouter summarised.")
+                return r
 
         # Raw data fallback — always return something
+        print(Fore.RED + "❌ [Manager]: All summary providers failed.")
         if knowledge_ctx.get("web_data"):
-            print(Fore.YELLOW + "⚠️  [Manager]: Serving raw web data.")
+            print(Fore.YELLOW + "⚠️  Serving raw web data.")
             return knowledge_ctx["web_data"]
         if knowledge_ctx.get("wiki_data"):
-            print(Fore.YELLOW + "⚠️  [Manager]: Serving raw Wikipedia data.")
+            print(Fore.YELLOW + "⚠️  Serving raw Wikipedia data.")
             return knowledge_ctx["wiki_data"]
 
         return "❌ No AI providers available and no cached data found for that query."
+

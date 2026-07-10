@@ -22,6 +22,17 @@ except ImportError as _routing_err:
     print(f"⚠️  [Routing]: New routing system unavailable ({_routing_err}). Falling back to legacy mode.")
     _ROUTING_AVAILABLE = False
 
+# ── ENGINE LAYER v7 (query normalization, confidence scoring) ─────────────────
+try:
+    from engine.query_normalizer  import QueryNormalizer
+    from engine.entity_extractor  import EntityExtractor
+    from engine.confidence_engine import ConfidenceEngine
+    from engine.source_registry   import configure_web_scraper, configure_chat_log
+    _ENGINE_AVAILABLE = True
+except ImportError as _engine_err:
+    print(f"⚠️  [Engine]: Dynamic engine unavailable ({_engine_err}). Normalization/scoring disabled.")
+    _ENGINE_AVAILABLE = False
+
 def load_json_registry(file_path):
     if os.path.exists(file_path):
         with open(file_path, "r") as f:
@@ -403,6 +414,23 @@ if __name__ == "__main__":
             processed_input = user_input.lower().strip()
             timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
+            # ── QUERY NORMALIZATION (v7 engine layer) ─────────────────────
+            _normalized_query = processed_input
+            if _ENGINE_AVAILABLE:
+                try:
+                    _nq = QueryNormalizer.normalize(user_input)
+                    _normalized_query = _nq.normalized
+                    if _nq.was_changed and _nq.corrections_made:
+                        _fixes = ", ".join(f"{a}→{b}" for a, b in _nq.corrections_made[:3])
+                        print(Fore.CYAN + f"🔤 [Normalizer]: {_fixes}")
+                    # Wire current chat log into SourceRegistry
+                    configure_chat_log(config.chat_log, max_turns=config.MAX_CHAT_HISTORY)
+                    configure_web_scraper(commands.search_google_scrape)
+                except Exception as _ne:
+                    _normalized_query = processed_input   # safe fallback
+            # Use normalized query for routing, but keep original for display
+            processed_input = _normalized_query
+
             if processed_input == config.CMD_EXIT or any(p in processed_input for p in config.CMD_QUIT):
                 core_functions.speak("Mainframe shut down procedure complete.")
                 core_functions.play_sound(config.SHUTDOWN_SOUND_FILE)
@@ -659,11 +687,10 @@ if __name__ == "__main__":
                 json.dump(config.chat_log, f, indent=2)
             print(Fore.CYAN + f"📂 Log states written cleanly to '{config.CONVERSATIONS_FILE}' and '{config.LOG_FILE}'.")
 
-            # Only persist to knowledge base when answer came from verified web scrape data
-            # AND the query is a specific factual question (not generic/conversational)
+            # ── CACHE QUALITY GUARD (v7 Confidence Engine) ─────────────────
             _is_no_cache = any(nc in processed_input for nc in NO_CACHE_QUERIES)
 
-            # Cache Quality Guard: block evasive / hallucinated / low-quality replies
+            # Legacy low-quality phrase blocklist (always active)
             _CACHE_REJECT = [
                 "does not name", "does not specify", "does not mention",
                 "does not indicate", "does not state",
@@ -672,17 +699,36 @@ if __name__ == "__main__":
                 "i don't have access to real", "i cannot provide",
                 "i'm unable to", "unable to provide",
                 "you might want to check", "i cannot confirm",
-                "no specific information", "it is illegal",       # clearly off-topic
-                "wrong answers only",                             # game content
-                "skip long lines with clear",                     # CLEAR app
-                "league of legends",                              # off-topic brand
-                "jewelry", "metals and stones",                   # "u are" jewellery site
+                "no specific information", "it is illegal",
+                "wrong answers only", "skip long lines with clear",
+                "league of legends", "jewelry", "metals and stones",
             ]
             _is_low_quality = any(phrase in reply.lower() for phrase in _CACHE_REJECT)
 
+            # v7: use ConfidenceEngine for a numeric score when available
+            _conf_score = _reply_confidence  # legacy string: "high" / "medium"
+            if _ENGINE_AVAILABLE and decision in ("web", "react"):
+                try:
+                    _sources_used = {}
+                    if web_results:
+                        _sources_used["web" if decision == "web" else "react"] = str(web_results)[:500]
+                    _numeric_score = ConfidenceEngine.score(
+                        answer=reply,
+                        sources=_sources_used,
+                        source_name="web+gemini" if _reply_confidence == "high" else "web",
+                    )
+                    _conf_label = ConfidenceEngine.label(_numeric_score)
+                    print(Fore.CYAN + f"🎯 [Confidence]: score={_numeric_score:.2f} ({_conf_label})")
+                    # Override cache decision with numeric threshold
+                    _should_cache = ConfidenceEngine.should_cache(_numeric_score, threshold=0.6)
+                    _conf_score   = _conf_label
+                    _is_low_quality = _is_low_quality or not _should_cache
+                except Exception:
+                    pass  # fall through to legacy string check
+
             if decision in ("web", "react") and web_results and not _is_no_cache and not _is_low_quality:
                 _src = "react" if decision == "react" else ("web+gemini" if _reply_confidence == "high" else "web")
-                extract_and_update_knowledge(processed_input, reply, source=_src, confidence=_reply_confidence)
+                extract_and_update_knowledge(processed_input, reply, source=_src, confidence=str(_conf_score))
             elif _is_low_quality:
                 print(Fore.YELLOW + "⚠️ [Cache Guard]: Low-quality response detected — skipping knowledge sync.")
             gc.collect()
