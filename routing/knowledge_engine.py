@@ -3,18 +3,24 @@ routing/knowledge_engine.py
 ============================
 Collects knowledge from multiple sources BEFORE asking any AI model.
 
-Sources (selected based on intent type):
-  • Web search   — live DuckDuckGo scrape  (WEB_SEARCH, UNKNOWN)
-  • Wikipedia    — encyclopedic summary     (WIKIPEDIA, REASONING, WEB_SEARCH)
-  • Chat history — recent conversation      (CHAT, MEMORY, CODING, REASONING)
+v7.1: Fully delegates to engine.knowledge_planner.KnowledgePlan which:
+  1. Detects if query needs LATEST data (Web first) or ENCYCLOPEDIC (Wiki first)
+  2. Automatically fetches more sources when confidence is low (< 0.55)
+  3. Merges all sources before returning context
 
-The engine returns a context dict consumed by ai_router.py and ProviderManager.
+Source priority per query type:
+  Latest queries  (who is CM/PM, current price, news, etc.)
+    → Web (live)  →  Wikipedia  →  Chat History
+  
+  Encyclopedic queries (what is, history of, define, etc.)
+    → Wikipedia  →  Web (fallback if Wiki confidence low)  →  Chat History
 
 Context dict keys:
-    web_data    : str | missing   — raw web-scrape text
-    wiki_data   : str | missing   — Wikipedia summary text
-    chat_ctx    : str | missing   — formatted recent chat turns
-    has_context : bool            — True if web_data or wiki_data present
+    web_data    : str | None   — raw web-scrape text
+    wiki_data   : str | None   — Wikipedia summary text
+    chat_ctx    : str | None   — formatted recent chat turns
+    has_context : bool         — True if web_data or wiki_data present
+    sources_used: list[str]    — e.g. ["web", "wikipedia"]
 """
 
 from __future__ import annotations
@@ -23,30 +29,31 @@ from typing import Callable
 
 from .intent_detector import IntentType
 
-# Wikipedia is optional (not available on every install)
+# ── Engine layer (dynamic planner with freshness + confidence fallback) ────────
+try:
+    from engine.knowledge_planner import KnowledgePlan
+    _PLANNER_AVAILABLE = True
+except ImportError:
+    _PLANNER_AVAILABLE = False
+
+# Wikipedia direct import (used in legacy mode)
 try:
     import wikipedia as _wikipedia
     _WIKI_OK = True
 except ImportError:
     _WIKI_OK = False
 
-# Intents that need live web data
+# ─────────────────────────────────────────────────────────────────────────────
+# Legacy frozensets (only used when engine/ is not importable)
+# ─────────────────────────────────────────────────────────────────────────────
 _WEB_INTENTS  = frozenset([IntentType.WEB_SEARCH, IntentType.UNKNOWN])
-
-# Intents that benefit from Wikipedia background
 _WIKI_INTENTS = frozenset([
-    IntentType.WEB_SEARCH,
-    IntentType.WIKIPEDIA,
-    IntentType.UNKNOWN,
-    IntentType.REASONING,
+    IntentType.WEB_SEARCH, IntentType.WIKIPEDIA,
+    IntentType.UNKNOWN, IntentType.REASONING,
 ])
-
-# Intents that benefit from recent chat history
 _HIST_INTENTS = frozenset([
-    IntentType.CHAT,
-    IntentType.MEMORY,
-    IntentType.CODING,
-    IntentType.REASONING,
+    IntentType.CHAT, IntentType.MEMORY,
+    IntentType.CODING, IntentType.REASONING,
 ])
 
 
@@ -54,20 +61,26 @@ class KnowledgeEngine:
     """
     Multi-source knowledge collector.
 
+    v7.1 — delegates to KnowledgePlan.collect_with_fallback():
+      - Detects freshness need (web-first vs wiki-first)
+      - Confidence-based fallback: low score → fetch more sources
+      - Merges all sources into one context dict
+
     Usage (called once per user turn, after intent classification):
 
         ctx = KnowledgeEngine.collect(
             query        = processed_input,
-            intent       = IntentType.WEB_SEARCH,
+            intent       = IntentType.WIKIPEDIA,
             config       = config,
             chat_log     = config.chat_log,
             web_scraper  = commands.search_google_scrape,
         )
 
-        # ctx["web_data"]   → scraped text (may be absent)
-        # ctx["wiki_data"]  → Wikipedia text (may be absent)
-        # ctx["chat_ctx"]   → recent turns formatted as "You: ...\nJarvis: ..."
-        # ctx["has_context"]→ True if web_data or wiki_data collected
+        ctx["web_data"]    → scraped text (may be None)
+        ctx["wiki_data"]   → Wikipedia text (may be None)
+        ctx["chat_ctx"]    → recent turns formatted as "You: ...\\nJarvis: ..."
+        ctx["has_context"] → True if web_data or wiki_data collected
+        ctx["sources_used"]→ ["web", "wikipedia"] (for logging)
     """
 
     @staticmethod
@@ -81,15 +94,44 @@ class KnowledgeEngine:
         """
         Parameters
         ----------
-        query       : processed (lowercased) user query
+        query       : processed (normalized) user query
         intent      : classified intent from IntentDetector
         config      : jarvis config module
         chat_log    : session log [{role, text, timestamp}, ...]
-        web_scraper : callable(query) → str | None  (commands.search_google_scrape)
+        web_scraper : callable(query) → str | None
         """
+
+        # ── v7.1: Use dynamic planner with freshness + confidence fallback ────
+        if _PLANNER_AVAILABLE:
+            ctx = KnowledgePlan.collect_with_fallback(
+                query                = query,
+                intent               = intent.value,   # string e.g. "WIKIPEDIA"
+                web_scraper          = web_scraper,
+                config               = config,
+                chat_log             = chat_log,
+                confidence_threshold = 0.55,           # fetch more sources below this
+                max_sources          = 3,
+            )
+            return ctx
+
+        # ── Legacy fallback (when engine/ is not available) ──────────────────
+        return KnowledgeEngine._legacy_collect(
+            query=query, intent=intent, config=config,
+            chat_log=chat_log, web_scraper=web_scraper,
+        )
+
+    @staticmethod
+    def _legacy_collect(
+        query: str,
+        intent: IntentType,
+        config,
+        chat_log: list | None = None,
+        web_scraper: Callable[[str], str | None] | None = None,
+    ) -> dict:
+        """Legacy fixed-order collection (used when engine/ unavailable)."""
         ctx: dict = {}
 
-        # ── Web search ─────────────────────────────────────────────────────
+        # Web search
         if intent in _WEB_INTENTS and web_scraper is not None:
             print("🌐 [Knowledge Engine]: Fetching live web data...")
             try:
@@ -102,7 +144,7 @@ class KnowledgeEngine:
             except Exception as ex:
                 print(f"⚠️  [Knowledge Engine]: Web scraper error — {str(ex)[:60]}")
 
-        # ── Wikipedia ──────────────────────────────────────────────────────
+        # Wikipedia
         if intent in _WIKI_INTENTS and _WIKI_OK:
             print("📖 [Knowledge Engine]: Fetching Wikipedia data...")
             try:
@@ -110,10 +152,9 @@ class KnowledgeEngine:
                 ctx["wiki_data"] = wiki_text.strip()
                 print(f"✅ [Knowledge Engine]: Wikipedia — {len(ctx['wiki_data'])} chars captured.")
             except Exception as ex:
-                # DisambiguationError, PageError, etc. are common — always silent
                 print(f"⚠️  [Knowledge Engine]: Wikipedia — {str(ex)[:60]}")
 
-        # ── Chat history context ───────────────────────────────────────────
+        # Chat history
         if intent in _HIST_INTENTS and chat_log:
             max_hist = getattr(config, "MAX_CHAT_HISTORY", 6)
             recent   = chat_log[-max_hist:]
@@ -126,7 +167,6 @@ class KnowledgeEngine:
             if lines:
                 ctx["chat_ctx"] = "\n".join(lines)
 
-        # ── Summary flag ───────────────────────────────────────────────────
-        ctx["has_context"] = bool(ctx.get("web_data") or ctx.get("wiki_data"))
-
+        ctx["has_context"]  = bool(ctx.get("web_data") or ctx.get("wiki_data"))
+        ctx["sources_used"] = []
         return ctx

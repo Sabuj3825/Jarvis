@@ -126,7 +126,11 @@ class WebSearchSource(KnowledgeSource):
     """DuckDuckGo Lite scraper — live web data."""
 
     name              = "web"
-    supported_intents = frozenset(["WEB_SEARCH", "UNKNOWN", "REASONING"])
+    supported_intents = frozenset([
+        "WEB_SEARCH", "UNKNOWN", "REASONING",
+        # Also available for Wikipedia queries as fresh-data fallback
+        "WIKIPEDIA",
+    ])
     priority          = 8
     reliability       = 0.7   # web snippets are decent but not always accurate
 
