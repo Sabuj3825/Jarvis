@@ -101,17 +101,43 @@ class KnowledgeEngine:
         web_scraper : callable(query) → str | None
         """
 
-        # ── v7.1: Use dynamic planner with freshness + confidence fallback ────
+        # ── v8: Execute dynamic planner with freshness + confidence fallback ────
         if _PLANNER_AVAILABLE:
-            ctx = KnowledgePlan.collect_with_fallback(
-                query                = query,
-                intent               = intent.value,   # string e.g. "WIKIPEDIA"
-                web_scraper          = web_scraper,
-                config               = config,
-                chat_log             = chat_log,
-                confidence_threshold = 0.55,           # fetch more sources below this
-                max_sources          = 3,
-            )
+            from engine.knowledge_planner import KnowledgePlanner
+            from engine.source_registry import configure_web_scraper, configure_chat_log
+
+            # Configure dynamic sources
+            if web_scraper:
+                configure_web_scraper(web_scraper)
+            if chat_log:
+                configure_chat_log(chat_log)
+
+            k_plan = KnowledgePlanner.plan(query, intent)
+            ctx = {"has_context": False, "sources_used": []}
+
+            for source in k_plan.sources:
+                if not source.is_available():
+                    continue
+                
+                print(f"🌐 [Knowledge Engine]: Fetching from {source.name}...")
+                try:
+                    data = source.fetch(query)
+                    if data:
+                        if source.name == "web":
+                            ctx["web_data"] = data
+                        elif source.name == "wikipedia":
+                            ctx["wiki_data"] = data
+                        elif source.name == "chat_history":
+                            ctx["chat_ctx"] = data
+                        
+                        ctx["sources_used"].append(source.name)
+                        ctx["has_context"] = True
+                        print(f"✅ [Knowledge Engine]: {source.name.capitalize()} — {len(data)} chars captured.")
+                    else:
+                        print(f"⚠️  [Knowledge Engine]: {source.name.capitalize()} returned empty result.")
+                except Exception as ex:
+                    print(f"⚠️  [Knowledge Engine]: {source.name.capitalize()} error — {str(ex)[:60]}")
+            
             return ctx
 
         # ── Legacy fallback (when engine/ is not available) ──────────────────
