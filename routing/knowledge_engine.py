@@ -47,14 +47,13 @@ except ImportError:
 # ─────────────────────────────────────────────────────────────────────────────
 # Legacy frozensets (only used when engine/ is not importable)
 # ─────────────────────────────────────────────────────────────────────────────
-_WEB_INTENTS  = frozenset([IntentType.WEB_SEARCH, IntentType.UNKNOWN])
+_WEB_INTENTS  = frozenset([IntentType.FACT_QUERY, IntentType.UNKNOWN])
 _WIKI_INTENTS = frozenset([
-    IntentType.WEB_SEARCH, IntentType.WIKIPEDIA,
-    IntentType.UNKNOWN, IntentType.REASONING,
+    IntentType.FACT_QUERY, IntentType.UNKNOWN, IntentType.REASONING_REQUEST,
 ])
 _HIST_INTENTS = frozenset([
-    IntentType.CHAT, IntentType.MEMORY,
-    IntentType.CODING, IntentType.REASONING,
+    IntentType.CONVERSATIONAL, IntentType.MEMORY_QUERY,
+    IntentType.CODING_REQUEST, IntentType.REASONING_REQUEST,
 ])
 
 
