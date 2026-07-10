@@ -1,0 +1,25 @@
+{
+  "local_commands": [
+    "battery",
+    "weather",
+    "calendar",
+    "music",
+    "files",
+    "tasks",
+    "time",
+    "location"
+  ],
+  "ai_capabilities": [
+    "chat",
+    "coding",
+    "reasoning",
+    "vision",
+    "web_summary"
+  ],
+  "knowledge_sources": [
+    "web",
+    "wikipedia",
+    "chat_history",
+    "local_cache"
+  ]
+}

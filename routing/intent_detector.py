@@ -33,41 +33,37 @@ import requests
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Intent taxonomy
+# Intent taxonomy (v8) - Separate from Execution Task
 # ─────────────────────────────────────────────────────────────────────────────
 
 class IntentType(str, Enum):
-    LOCAL_COMMAND = "LOCAL_COMMAND"
-    CHAT          = "CHAT"
-    CODING        = "CODING"
-    REASONING     = "REASONING"
-    VISION        = "VISION"
-    WEB_SEARCH    = "WEB_SEARCH"
-    WIKIPEDIA     = "WIKIPEDIA"
-    MEMORY        = "MEMORY"
-    FILE_SEARCH   = "FILE_SEARCH"
-    UNKNOWN       = "UNKNOWN"
+    SYSTEM_IDENTITY = "SYSTEM_IDENTITY"
+    LOCAL_COMMAND   = "LOCAL_COMMAND"
+    FACT_QUERY      = "FACT_QUERY"
+    CONVERSATIONAL  = "CONVERSATIONAL"
+    CODING_REQUEST  = "CODING_REQUEST"
+    REASONING_REQUEST = "REASONING_REQUEST"
+    VISION_REQUEST  = "VISION_REQUEST"
+    MEMORY_QUERY    = "MEMORY_QUERY"
+    FILE_SEARCH     = "FILE_SEARCH"
+    UNKNOWN         = "UNKNOWN"
 
     def to_cache_key(self) -> str:
         """
         Map this intent to the 'decision' key expected by the knowledge-cache
         write logic in jarvis.py.
-
-        "web"          → cache with source=web/web+gemini
-        "react"        → cache with source=react, confidence=high
-        "conversation" → do NOT cache
         """
         _MAP = {
-            IntentType.WEB_SEARCH:    "web",
-            IntentType.WIKIPEDIA:     "web",
-            IntentType.UNKNOWN:       "web",
-            IntentType.REASONING:     "react",   # multi-source, high confidence
-            IntentType.CHAT:          "conversation",
-            IntentType.CODING:        "conversation",
-            IntentType.VISION:        "conversation",
-            IntentType.MEMORY:        "conversation",
-            IntentType.LOCAL_COMMAND: "conversation",
-            IntentType.FILE_SEARCH:   "conversation",
+            IntentType.FACT_QUERY:        "web",
+            IntentType.UNKNOWN:           "web",
+            IntentType.REASONING_REQUEST: "react",
+            IntentType.CONVERSATIONAL:    "conversation",
+            IntentType.CODING_REQUEST:    "conversation",
+            IntentType.VISION_REQUEST:    "conversation",
+            IntentType.MEMORY_QUERY:      "conversation",
+            IntentType.LOCAL_COMMAND:     "conversation",
+            IntentType.FILE_SEARCH:       "conversation",
+            IntentType.SYSTEM_IDENTITY:   "conversation",
         }
         return _MAP.get(self, "conversation")
 
@@ -224,6 +220,11 @@ class IntentDetector:
         """
         q = query.lower().strip()
 
+        # ── Tier 1: System Identity bypass ────────────────────────────────────
+        _ID_PHRASES = ["who are you", "what are you", "who created you", "who made you", "version", "your name"]
+        if any(ph in q for ph in _ID_PHRASES):
+            return IntentType.SYSTEM_IDENTITY
+
         # ── Tier 1: Single-token conversational bypass ────────────────────────
         # NOTE: we check LOCAL_EXACT FIRST before the length bypass,
         # so single-word commands like 'time', 'stop', 'date' are not swallowed.
@@ -231,9 +232,9 @@ class IntentDetector:
         if bare in _LOCAL_EXACT:
             return IntentType.LOCAL_COMMAND
         if bare in _CHAT_TOKENS:
-            return IntentType.CHAT
+            return IntentType.CONVERSATIONAL
         if len(q.split()) <= 1 and len(q) <= 4:
-            return IntentType.CHAT
+            return IntentType.CONVERSATIONAL
 
         # ── Tier 2a: Local command — prefix match ─────────────────────────────
         for prefix in _LOCAL_PREFIXES:
@@ -262,22 +263,22 @@ class IntentDetector:
         # ── Tier 2f: Reasoning / complex research (≥4 words) ─────────────────
         # Checked BEFORE coding so 'optimize' beats 'implement'
         if len(q.split()) >= 4 and any(ph in q for ph in _REASONING_PHRASES):
-            return IntentType.REASONING
+            return IntentType.REASONING_REQUEST
 
         # ── Tier 2g: Coding ───────────────────────────────────────────────────
         if any(ph in q for ph in _CODING_PHRASES):
-            return IntentType.CODING
+            return IntentType.CODING_REQUEST
 
-        # ── Tier 2h: Live web search ──────────────────────────────────────────
+        # ── Tier 2h: Fact Query (Web phrases) ─────────────────────────────────
         if any(ph in q for ph in _WEB_PHRASES):
-            return IntentType.WEB_SEARCH
+            return IntentType.FACT_QUERY
         # Year-based detection (handles queries starting with a year)
         if any(yr in q for yr in _YEAR_RE_STRS):
-            return IntentType.WEB_SEARCH
+            return IntentType.FACT_QUERY
 
-        # ── Tier 2i: Wikipedia encyclopedic lookup ───────────────────────────
+        # ── Tier 2i: Fact Query (Wikipedia encyclopedic lookup) ───────────────
         if any(ph in q for ph in _WIKI_PHRASES):
-            return IntentType.WIKIPEDIA
+            return IntentType.FACT_QUERY
 
         # ── Tier 3: Ollama LLM for ambiguous queries ──────────────────────────
         if config is not None and use_llm:
@@ -285,13 +286,13 @@ class IntentDetector:
             if llm_intent is not None:
                 return llm_intent
 
-        # ── Default heuristic: question format → WEB_SEARCH ──────────────────
+        # ── Default heuristic: question format → FACT_QUERY ──────────────────
         words = q.split()
         if len(words) >= 3 and words[0] in _QUESTION_STARTERS:
-            return IntentType.WEB_SEARCH
+            return IntentType.FACT_QUERY
 
         # ── Ultimate fallback ─────────────────────────────────────────────────
-        return IntentType.CHAT
+        return IntentType.CONVERSATIONAL
 
     # ─────────────────────────────────────────────────────────────────────────
     # Tier 3 — Ollama LLM classifier
@@ -309,14 +310,14 @@ class IntentDetector:
             "Classify the query below into exactly ONE category. "
             "Output ONLY the category name — nothing else.\n\n"
             "Categories:\n"
-            "  CHAT        — greetings, casual talk, opinions\n"
-            "  CODING      — write/debug/implement code, algorithms\n"
-            "  REASONING   — analyze, compare, calculate, research topics\n"
-            "  WEB_SEARCH  — latest news, real-time data, prices\n"
-            "  WIKIPEDIA   — historical facts, definitions, biographies\n"
-            "  VISION      — image or picture analysis\n"
-            "  MEMORY      — questions about this conversation\n"
-            "  FILE_SEARCH — read or analyze local files\n\n"
+            "  SYSTEM_IDENTITY   — questions about who you are, version, maker\n"
+            "  CONVERSATIONAL    — greetings, casual talk, opinions\n"
+            "  CODING_REQUEST    — write/debug/implement code, algorithms\n"
+            "  REASONING_REQUEST — analyze, compare, calculate, research topics\n"
+            "  FACT_QUERY        — latest news, historical facts, definitions, real-time data\n"
+            "  VISION_REQUEST    — image or picture analysis\n"
+            "  MEMORY_QUERY      — questions about this conversation\n"
+            "  FILE_SEARCH       — read or analyze local files\n\n"
             f"Query: {query}"
         )
         try:
@@ -333,8 +334,8 @@ class IntentDetector:
             raw = res.json()["message"]["content"].upper().strip()
             # Extract first matching category word from the response
             _CATS = [
-                "CODING", "REASONING", "WEB_SEARCH", "WIKIPEDIA",
-                "VISION", "MEMORY", "FILE_SEARCH", "CHAT",
+                "SYSTEM_IDENTITY", "CODING_REQUEST", "REASONING_REQUEST", "FACT_QUERY",
+                "VISION_REQUEST", "MEMORY_QUERY", "FILE_SEARCH", "CONVERSATIONAL",
             ]
             for cat in _CATS:
                 if cat in raw:
@@ -342,3 +343,4 @@ class IntentDetector:
         except Exception:
             pass  # Ollama offline or timed out — caller falls through
         return None
+

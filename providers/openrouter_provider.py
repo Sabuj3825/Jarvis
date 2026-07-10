@@ -190,9 +190,19 @@ class OpenRouterProvider:
             for cat in _VALID_CATEGORIES:
                 entries = data.get(cat, [])
                 # Each entry is {"model": "...", "latency": ..., ...}
-                self._models[cat] = [
-                    e["model"] for e in entries if isinstance(e, dict) and "model" in e
-                ]
+                valid_models = []
+                for e in entries:
+                    if isinstance(e, dict) and "model" in e:
+                        latency = e.get("latency", 0.0)
+                        # Health check: Skip models taking longer than 10 seconds (unhealthy/overloaded)
+                        if latency > 10.0:
+                            continue
+                        # Context/Capabilities check: We can add context checks here if available in json
+                        valid_models.append(e)
+                
+                # Strict sorting: prioritize lower latency, then lower cost
+                valid_models.sort(key=lambda x: (x.get("latency", 99.0), x.get("cost", 99.0)))
+                self._models[cat] = [m["model"] for m in valid_models]
 
         except FileNotFoundError:
             # openrouter_models.json not generated yet — that's OK.

@@ -12,11 +12,16 @@ import react_agent
 import threading
 import gc
 
-# ── NEW UNIFIED ROUTING SYSTEM ─────────────────────────────────────────────
+# ── NEW UNIFIED ROUTING SYSTEM (v8) ─────────────────────────────────────────
 try:
     from routing.intent_detector import IntentDetector, IntentType
     from routing.knowledge_engine import KnowledgeEngine
     from routing.ai_router import AIRouter
+    from engine.task_classifier import TaskClassifier, ExecutionTask
+    from engine.execution_planner import ExecutionPlanner
+    from engine.knowledge_planner import KnowledgePlanner
+    from engine.fact_verifier import FactVerifier
+    from engine.cache_manager import CacheManager
     _ROUTING_AVAILABLE = True
 except ImportError as _routing_err:
     print(f"⚠️  [Routing]: New routing system unavailable ({_routing_err}). Falling back to legacy mode.")
@@ -534,33 +539,17 @@ if __name__ == "__main__":
 
             # ── STEP 1: KNOWLEDGE CACHE CHECK (with TTL expiry) ──────────────────
             print(Fore.CYAN + "💾 [Cache Check]: Scanning knowledge base for known answer...")
-            knowledge_base = load_json_registry(config.KNOWLEDGE_FILE)
+            
             _cache_hit = False
-            if processed_input in knowledge_base:
-                entry      = knowledge_base[processed_input]
-                expires_at = entry.get("expires_at")
-                _expired   = False
-
-                if expires_at:
-                    try:
-                        expiry_dt = datetime.datetime.strptime(expires_at, "%Y-%m-%d")
-                        if datetime.datetime.now() > expiry_dt:
-                            _expired = True
-                    except ValueError:
-                        pass  # Malformed date — treat as valid
-
-                if _expired:
-                    print(Fore.YELLOW + f"⏰ [Cache]: Stale entry (expired {expires_at}). Removing and fetching fresh data...")
-                    del knowledge_base[processed_input]
-                    save_json_registry(config.KNOWLEDGE_FILE, knowledge_base)
-                    # Fall through to live pipeline
-                else:
+            if _ROUTING_AVAILABLE:
+                cm = CacheManager(config)
+                entry = cm.check_cache(processed_input)
+                if entry:
                     _cache_hit = True
                     cached     = entry["fact_extracted"]
                     src_tag    = entry.get("source", "unknown")
                     conf_tag   = entry.get("confidence", "?")
                     exp_tag    = entry.get("expires_at", "no expiry")
-                    # Calculate days remaining if we have a date
                     try:
                         days_left = (datetime.datetime.strptime(exp_tag, "%Y-%m-%d") - datetime.datetime.now()).days
                         ttl_str   = f"expires in {days_left}d"
@@ -575,41 +564,93 @@ if __name__ == "__main__":
                         json.dump(config.chat_log, f, indent=2)
                     print("")
                     continue
+            else:
+                knowledge_base = load_json_registry(config.KNOWLEDGE_FILE)
+                if processed_input in knowledge_base:
+                    entry      = knowledge_base[processed_input]
+                    expires_at = entry.get("expires_at")
+                    _expired   = False
+
+                    if expires_at:
+                        try:
+                            expiry_dt = datetime.datetime.strptime(expires_at, "%Y-%m-%d")
+                            if datetime.datetime.now() > expiry_dt:
+                                _expired = True
+                        except ValueError:
+                            pass  # Malformed date — treat as valid
+
+                    if _expired:
+                        print(Fore.YELLOW + f"⏰ [Cache]: Stale entry (expired {expires_at}). Removing and fetching fresh data...")
+                        del knowledge_base[processed_input]
+                        save_json_registry(config.KNOWLEDGE_FILE, knowledge_base)
+                    else:
+                        _cache_hit = True
+                        cached     = entry["fact_extracted"]
+                        core_functions.display_message("jarvis", cached, timestamp)
+                        core_functions.speak(cached)
+                        core_functions.play_sound(config.RESPONSE_SOUND_FILE)
+                        config.chat_log.append({"role": "jarvis", "text": cached, "timestamp": timestamp})
+                        with open(config.LOG_FILE, "w") as f:
+                            json.dump(config.chat_log, f, indent=2)
+                        print("")
+                        continue
 
             print(Fore.CYAN + "🔍 [Cache Miss]: No cached answer. Routing to live pipeline...")
 
             web_results       = None
             reply             = ""
             _reply_confidence = "medium"  # elevated to "high" when Gemini or multi-source synthesis is used
+            decision          = ""
 
             # ══════════════════════════════════════════════════════════════════
-            # STEP 2–4: UNIFIED ROUTING SYSTEM
-            # Intent Detection → Knowledge Collection → AI Provider Selection
+            # STEP 2–14: UNIFIED ROUTING SYSTEM (v8 Pipeline)
             # ══════════════════════════════════════════════════════════════════
             if _ROUTING_AVAILABLE:
-                # Step 2: Detect intent (rule-based, fast — LLM only for ambiguous cases)
+                # ── 14-Step Modular Pipeline ──
+                
+                # Step 3: Intent Detection (Normalizer is step 2, done earlier)
                 intent = IntentDetector.detect(processed_input, config)
                 print(Fore.MAGENTA + f"⚡ [Intent Detector]: {intent.value}")
 
-                # Step 3: Collect knowledge from relevant sources
-                knowledge_ctx = KnowledgeEngine.collect(
-                    processed_input,
-                    intent,
-                    config,
-                    chat_log=config.chat_log,
-                    web_scraper=commands.search_google_scrape,
-                )
+                # Step 4: Task Classifier
+                task = TaskClassifier.classify(intent)
+                
+                # Step 5: Execution Planner
+                plan = ExecutionPlanner.plan(processed_input, intent, task)
 
-                # Step 4: Route to the correct AI provider pipeline
-                reply = AIRouter.route(
-                    user_input, processed_input, intent, knowledge_ctx, config,
-                    chat_log=config.chat_log,
-                )
+                knowledge_ctx = {}
+                verified_context = ""
+                sources_data = {}
+                decision = intent.to_cache_key()
 
-                # Map intent back to the 'decision' key + confidence used by cache logic below
-                decision          = intent.to_cache_key()
-                web_results       = knowledge_ctx.get("web_data") or knowledge_ctx.get("wiki_data")
+                # Step 6: Knowledge Planner
+                if plan.requires_knowledge:
+                    k_plan = KnowledgePlanner.plan(plan, config)
+                    
+                    # Step 7 & 8: Source Registry & Data Fetching
+                    knowledge_ctx = KnowledgeEngine.collect(
+                        processed_input,
+                        intent,
+                        config,
+                        chat_log=config.chat_log,
+                        web_scraper=commands.search_google_scrape,
+                    )
+                    
+                    if knowledge_ctx.get("web_data"): sources_data["web"] = knowledge_ctx["web_data"]
+                    if knowledge_ctx.get("wiki_data"): sources_data["wikipedia"] = knowledge_ctx["wiki_data"]
+                    
+                    # Step 9: Fact Extraction / Verification
+                    has_conflict, verified_context = FactVerifier.verify(sources_data)
+                    if has_conflict:
+                        print(Fore.YELLOW + "⚠️ [FactVerifier]: Contradiction detected among sources!")
+
+                # Step 12 & 13: Prompt Construction & Provider Execution
+                reply = AIRouter.route(plan, verified_context, config, chat_log=config.chat_log)
+
+                # Setup for Step 10 & 11 (Confidence & Caching)
+                web_results = knowledge_ctx.get("web_data") or knowledge_ctx.get("wiki_data")
                 _reply_confidence = "high" if knowledge_ctx.get("has_context") else "medium"
+                _sources_used = sources_data
 
             else:
                 # ── LEGACY FALLBACK (if routing/ packages failed to import) ──
@@ -687,10 +728,10 @@ if __name__ == "__main__":
                 json.dump(config.chat_log, f, indent=2)
             print(Fore.CYAN + f"📂 Log states written cleanly to '{config.CONVERSATIONS_FILE}' and '{config.LOG_FILE}'.")
 
-            # ── CACHE QUALITY GUARD (v7 Confidence Engine) ─────────────────
+            # ── CACHE QUALITY GUARD (v8 Confidence & Cache Engine) ─────────────────
             _is_no_cache = any(nc in processed_input for nc in NO_CACHE_QUERIES)
 
-            # Legacy low-quality phrase blocklist (always active)
+            # Low-quality phrase blocklist
             _CACHE_REJECT = [
                 "does not name", "does not specify", "does not mention",
                 "does not indicate", "does not state",
@@ -705,30 +746,33 @@ if __name__ == "__main__":
             ]
             _is_low_quality = any(phrase in reply.lower() for phrase in _CACHE_REJECT)
 
-            # v7: use ConfidenceEngine for a numeric score when available
-            _conf_score = _reply_confidence  # legacy string: "high" / "medium"
-            if _ENGINE_AVAILABLE and decision in ("web", "react"):
+            _conf_score = _reply_confidence
+            if _ENGINE_AVAILABLE and decision in ("web", "react", "wikipedia", "knowledge_retrieval"):
                 try:
-                    _sources_used = {}
-                    if web_results:
-                        _sources_used["web" if decision == "web" else "react"] = str(web_results)[:500]
+                    # Calculate true confidence score
                     _numeric_score = ConfidenceEngine.score(
                         answer=reply,
-                        sources=_sources_used,
+                        sources=getattr(locals(), '_sources_used', {}),
                         source_name="web+gemini" if _reply_confidence == "high" else "web",
                     )
                     _conf_label = ConfidenceEngine.label(_numeric_score)
                     print(Fore.CYAN + f"🎯 [Confidence]: score={_numeric_score:.2f} ({_conf_label})")
-                    # Override cache decision with numeric threshold
+                    
                     _should_cache = ConfidenceEngine.should_cache(_numeric_score, threshold=0.6)
                     _conf_score   = _conf_label
                     _is_low_quality = _is_low_quality or not _should_cache
                 except Exception:
-                    pass  # fall through to legacy string check
+                    pass
 
-            if decision in ("web", "react") and web_results and not _is_no_cache and not _is_low_quality:
-                _src = "react" if decision == "react" else ("web+gemini" if _reply_confidence == "high" else "web")
-                extract_and_update_knowledge(processed_input, reply, source=_src, confidence=str(_conf_score))
+            if decision in ("web", "react", "wikipedia", "knowledge_retrieval") and web_results and not _is_no_cache and not _is_low_quality:
+                if _ROUTING_AVAILABLE:
+                    cm = CacheManager(config)
+                    # We pass the intent to ensure only factual data is cached
+                    cm.write_cache(processed_input, reply, intent, confidence=str(_conf_score))
+                    print(Fore.GREEN + f"💡 [Brain Sync]: Fact cached (source: {intent.to_cache_key()}, confidence: {_conf_score}).")
+                else:
+                    _src = "react" if decision == "react" else ("web+gemini" if _reply_confidence == "high" else "web")
+                    extract_and_update_knowledge(processed_input, reply, source=_src, confidence=str(_conf_score))
             elif _is_low_quality:
                 print(Fore.YELLOW + "⚠️ [Cache Guard]: Low-quality response detected — skipping knowledge sync.")
             gc.collect()

@@ -88,10 +88,11 @@ class ConfidenceEngine:
         sources: dict[str, str] | None = None,
         has_conflict: bool = False,
         source_name: str = "unknown",
+        freshness_score: float = 1.0,
         min_cache_confidence: float = 0.6,
     ) -> float:
         """
-        Compute a confidence score for *answer*.
+        Compute a multidimensional confidence score for *answer*.
 
         Parameters
         ----------
@@ -99,6 +100,7 @@ class ConfidenceEngine:
         sources       : dict of {source_name: raw_data} used to generate the answer
         has_conflict  : True if sources disagreed with each other
         source_name   : primary source label (e.g. "web+gemini", "react")
+        freshness_score: 1.0 for live data, lower for old cached data
         min_cache_confidence : threshold (not used here; used in should_cache)
 
         Returns
@@ -113,13 +115,15 @@ class ConfidenceEngine:
 
         # ── Factor 1: Source reliability (base score) ─────────────────────────
         reliability = _SOURCE_RELIABILITY.get(source_name, 0.5)
-        # If multiple sources used, average their reliabilities
         if sources:
             reliabilities = [
                 _SOURCE_RELIABILITY.get(sn, 0.5) for sn in sources.keys()
             ]
             reliability = sum(reliabilities) / len(reliabilities)
-        score += reliability * 0.4   # reliability contributes 40%
+        score += reliability * 0.35   # reliability contributes 35%
+
+        # ── Factor 1b: Freshness ──────────────────────────────────────────────
+        score += freshness_score * 0.10 # freshness contributes 10%
 
         # ── Factor 2: Agreement between sources ───────────────────────────────
         num_sources = len(sources)

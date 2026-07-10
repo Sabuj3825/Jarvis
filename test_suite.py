@@ -190,12 +190,13 @@ def run_test_suite():
 
     # Check Knowledge Planner Ordering
     try:
-        from engine.knowledge_planner import KnowledgePlan
+        from engine.knowledge_planner import KnowledgePlanner
         from engine.source_registry import configure_web_scraper
+        from routing.intent_detector import IntentType
         # Mock web scraper so WebSearchSource.is_available() returns True
         configure_web_scraper(lambda q: "mock")
-        plan_srcs = KnowledgePlan.plan("WEB_SEARCH", "what is machine learning")
-        planner_ok = plan_srcs and plan_srcs[0].name == "web"
+        plan_res = KnowledgePlanner.plan("what is machine learning", IntentType.FACT_QUERY)
+        planner_ok = plan_res.sources and plan_res.sources[0].name == "web"
     except Exception:
         planner_ok = False
 
@@ -204,6 +205,71 @@ def run_test_suite():
         planner_ok,
         "Knowledge planner prioritizes Web first for all queries.",
         "Knowledge planner not putting Web in priority slot 0."
+    )
+
+    # =========================================================================
+    # SECTION 6: v8 MODULAR ARCHITECTURE (Task & Execution)
+    # =========================================================================
+    print(f"\n{Fore.CYAN}{Style.BRIGHT}[SECTION 6: v8 MODULAR ARCHITECTURE]")
+
+    try:
+        from engine.task_classifier import TaskClassifier, ExecutionTask
+        from routing.intent_detector import IntentType
+        task = TaskClassifier.classify(IntentType.FACT_QUERY)
+        task_classifier_ok = (task == ExecutionTask.KNOWLEDGE_RETRIEVAL)
+    except Exception:
+        task_classifier_ok = False
+
+    assert_test(
+        "Task Classifier Mapping",
+        task_classifier_ok,
+        "Intent successfully mapped to granular ExecutionTask.",
+        "TaskClassifier failed to map FACT_QUERY to KNOWLEDGE_RETRIEVAL."
+    )
+
+    try:
+        from engine.execution_planner import ExecutionPlanner
+        plan = ExecutionPlanner.plan("query", IntentType.FACT_QUERY)
+        planner_ok2 = plan.requires_knowledge
+    except Exception:
+        planner_ok2 = False
+
+    assert_test(
+        "Execution Planner Engine",
+        planner_ok2,
+        "Execution Plan generated with correct knowledge requirements.",
+        "ExecutionPlanner failed to build valid ExecutionPlan."
+    )
+    
+    try:
+        from engine.fact_verifier import FactVerifier
+        conflict, _ = FactVerifier.verify({"web": "1994", "wiki": "2024"})
+        verifier_ok = conflict
+    except Exception:
+        verifier_ok = False
+
+    assert_test(
+        "Fact Verifier Conflict Detection",
+        verifier_ok,
+        "Heuristic contradiction successfully flagged across sources.",
+        "FactVerifier failed to detect obvious date conflict."
+    )
+
+    try:
+        from engine.cache_manager import CacheManager
+        cm = CacheManager(config)
+        cm.write_cache("test_query", "test_fact", IntentType.FACT_QUERY, "high")
+        entry = cm.check_cache("test_query")
+        cache_ok = entry and entry.get("fact_extracted") == "test_fact"
+        cm.wipe_cache("test_query")  # cleanup
+    except Exception:
+        cache_ok = False
+
+    assert_test(
+        "Cache Manager Operations",
+        cache_ok,
+        "Cache entry successfully written, checked, and wiped.",
+        "CacheManager I/O operations failed."
     )
 
     # =========================================================================

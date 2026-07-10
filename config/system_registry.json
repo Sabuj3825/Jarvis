@@ -1,0 +1,12 @@
+{
+  "modules": {
+    "IntentDetector": "routing.intent_detector",
+    "TaskClassifier": "engine.task_classifier",
+    "ExecutionPlanner": "engine.execution_planner",
+    "KnowledgePlanner": "engine.knowledge_planner",
+    "FactVerifier": "engine.fact_verifier",
+    "ConfidenceEngine": "engine.confidence_engine",
+    "AIRouter": "routing.ai_router",
+    "CacheManager": "engine.cache_manager"
+  }
+}
