@@ -625,7 +625,7 @@ if __name__ == "__main__":
 
                 # Step 6: Knowledge Planner
                 if plan.requires_knowledge:
-                    k_plan = KnowledgePlanner.plan(plan, config)
+                    k_plan = KnowledgePlanner.plan(processed_input, intent)
                     
                     # Step 7 & 8: Source Registry & Data Fetching
                     knowledge_ctx = KnowledgeEngine.collect(
