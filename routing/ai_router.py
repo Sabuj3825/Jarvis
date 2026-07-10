@@ -47,8 +47,10 @@ class AIRouter:
         print(Fore.MAGENTA + f"⚡ [AI Router]: Executing Task → {plan.task.value}")
 
         if plan.task == ExecutionTask.READ_LOCAL_REGISTRY:
+            from engine.identity_manager import IdentityManager
+            registry_data = IdentityManager.get_system_identity()
             return mgr.chat(
-                f"Use this local registry data to answer the user: {verified_context}\n\nUser: {plan.query}",
+                f"You are JARVIS. Use this local registry data to accurately answer the user's question about your identity and capabilities:\n\n{registry_data}\n\nUser: {plan.query}",
                 history=chat_log
             )
 

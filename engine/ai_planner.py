@@ -47,11 +47,13 @@ from .provider_registry import ProviderRegistry
 # and OpenRouter receives category="coding" to select coding-optimized models.
 # ─────────────────────────────────────────────────────────────────────────────
 _TASK_CAPABILITY_MAP: dict[str, str] = {
-    "chat":        "chat",
-    "coding":      "coding",       # ← FIXED: was "chat", now "coding"
-    "reasoning":   "reasoning",
-    "vision":      "vision",
-    "web_summary": "web_summary",  # ← FIXED: was "chat", now "web_summary"
+    "chat":          "chat",
+    "coding":        "coding",
+    "reasoning":     "reasoning",
+    "vision":        "vision",
+    "web_summary":   "web_summary",
+    "deep_research": "deep_research",
+    "agents":        "agents",
 }
 
 # System prompts per task (injected for providers that accept system_prompt kwarg)
@@ -123,20 +125,24 @@ class AIPlan:
 
         # ── Rich decision logging ─────────────────────────────────────────
         if providers:
-            provider_info = []
-            for p in providers:
+            print(Fore.CYAN + f"\n🤖 [AI Planner]: Capability '{capability}' requested")
+            print(Fore.CYAN + "   Provider Ranking (by capability priority & local-first policy):")
+            for i, p in enumerate(providers, 1):
                 meta = getattr(p, "_PROVIDER_META", {})
                 name = meta.get("name", "?")
-                prio = meta.get("priority", 0)
-                local = "local" if meta.get("is_local") else "cloud"
-                provider_info.append(f"{name}(p={prio},{local})")
-            print(Fore.CYAN + f"🤖 [AI Planner]: task={task} → capability={capability}")
-            print(Fore.CYAN + f"   Providers found: {' → '.join(provider_info)}")
+                is_local = meta.get("is_local", False)
+                
+                # Fetch capability-specific priority
+                prio_val = meta.get("priority", 0)
+                if isinstance(prio_val, dict):
+                    prio_val = prio_val.get(capability, 0)
+
+                badge = "[LOCAL]" if is_local else "[CLOUD]"
+                print(Fore.CYAN + f"   {i}. {name.capitalize()} {badge} (Priority: {prio_val})")
+            print("")
         else:
             print(Fore.RED + f"🤖 [AI Planner]: task={task} → capability={capability}")
             print(Fore.RED + f"   No providers found for '{capability}'!")
-
-        if not providers:
             return None, "", f"No providers registered for capability '{capability}'"
 
         sys_p    = _system_prompt(task, getattr(config, "DEVELOPER_ALIAS", "Green Bhai"))

@@ -128,11 +128,18 @@ class ProviderRegistry:
                 continue
             matching.append(p)
 
+        def get_priority(p):
+            meta = getattr(p, "_PROVIDER_META", {})
+            prio = meta.get("priority", 0)
+            if isinstance(prio, dict):
+                return prio.get(capability, 0)
+            return prio
+
         return sorted(
             matching,
             key=lambda p: (
+                -get_priority(p),
                 -int(getattr(p, "_PROVIDER_META", {}).get("is_local", False)),
-                -getattr(p, "_PROVIDER_META", {}).get("priority", 0),
             ),
         )
 

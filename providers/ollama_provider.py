@@ -22,12 +22,11 @@ _SYSTEM_PROMPT = (
 
 
 class OllamaProvider:
-    # ── Plugin metadata — auto-discovered by engine/provider_registry.py ──────
     _PROVIDER_META = {
         "name":         "ollama",
         "capabilities": ["chat", "coding", "reasoning", "web_summary"],
         "is_local":     True,
-        "priority":     10,   # highest priority — always tried first (Local-First)
+        "priority":     {"chat": 10, "coding": 1, "reasoning": 1, "web_summary": 5},
     }
     """
     Wraps the locally running Ollama LLM.
@@ -77,6 +76,12 @@ class OllamaProvider:
                 text = entry.get("text", "").strip()
                 if text:
                     context_msgs.append({"role": role, "content": text})
+            
+            # Replace the last user message with our augmented prompt
+            if context_msgs and context_msgs[-1]["role"] == "user":
+                context_msgs.pop()
+            context_msgs.append({"role": "user", "content": prompt})
+                
             messages = [system_msg] + context_msgs
         else:
             messages = [system_msg, {"role": "user", "content": prompt}]

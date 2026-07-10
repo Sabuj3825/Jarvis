@@ -27,7 +27,7 @@ except ImportError:
     _OpenAI = None          # type: ignore[assignment,misc]
     _OPENAI_AVAILABLE = False
 
-_VALID_CATEGORIES = ("chat", "reasoning", "vision")
+_VALID_CATEGORIES = ("chat", "coding", "reasoning", "vision", "agents", "deep_research")
 
 _DEFAULT_SYSTEM = (
     "You are Jarvis, a personal terminal assistant. "
@@ -39,9 +39,9 @@ class OpenRouterProvider:
     # ── Plugin metadata — auto-discovered by engine/provider_registry.py ──────
     _PROVIDER_META = {
         "name":         "openrouter",
-        "capabilities": ["chat", "coding", "reasoning", "vision"],
+        "capabilities": ["chat", "coding", "reasoning", "vision", "agents", "deep_research"],
         "is_local":     False,
-        "priority":     3,   # last resort cloud option
+        "priority":     {"chat": 1, "coding": 10, "reasoning": 10, "vision": 10, "agents": 10, "deep_research": 10},
     }
     """
     Calls OpenRouter models discovered dynamically from openrouter_models.json.
@@ -66,25 +66,19 @@ class OpenRouterProvider:
     # Public API
     # ─────────────────────────────────────────────────────────────────────────
 
-    def is_available(self) -> bool:
-        """
-        True when:
-          • openai package is installed
-          • OPENROUTER_API_KEY is set
-          • At least one model was loaded from the JSON cache
-        """
-        api_key = self._api_key()
+    def is_configured(self) -> bool:
+        """Returns True if the OpenRouter API key is configured and models are loaded."""
         return (
-            _OPENAI_AVAILABLE
-            and bool(api_key)
+            bool(self._api_key())
+            and _OPENAI_AVAILABLE
             and any(self._models.values())
         )
 
     def get_models(self, category: str = "chat") -> list[str]:
-        """Return the ordered list of model IDs for *category*."""
+        """Return the dynamically ranked list of model IDs for *category*."""
         if category not in _VALID_CATEGORIES:
             category = "chat"
-        return list(self._models.get(category, []))
+        return self._rank_models(category)
 
     def complete(
         self,
@@ -102,17 +96,35 @@ class OpenRouterProvider:
         (reply_text, None)          on success
         (None,       error_str)     when all models failed
         """
-        if not self.is_available():
+        if not self.is_configured():
             reason = "openai package not installed" if not _OPENAI_AVAILABLE else "API key not set or no models loaded"
-            return None, f"OpenRouter unavailable: {reason}"
+            return None, f"OpenRouter API key not configured: {reason}"
 
         models = self.get_models(category)
         if not models:
-            # Graceful category fallback: reasoning/vision → chat
+            # Graceful category fallback: reasoning/vision/deep_research/agents → chat
             if category != "chat":
                 models = self.get_models("chat")
             if not models:
                 return None, f"No OpenRouter models for category '{category}'"
+
+        from colorama import Fore, Style
+        print(f"\n{Fore.MAGENTA}{Style.BRIGHT}🤖 AI Router")
+        print(f"{Fore.WHITE}Task          : {category}")
+        print(f"{Fore.WHITE}Capability    : {category}")
+        print(f"{Fore.WHITE}Provider      : OpenRouter")
+        print(f"\n{Fore.WHITE}Ranking        :")
+        for i, m in enumerate(models[:5], 1):
+            print(f"{Fore.CYAN}{i}. {m}")
+        if len(models) > 5:
+            print(f"{Fore.CYAN}... and {len(models) - 5} more")
+        
+        print(f"\n{Fore.GREEN}Chosen Model  : {models[0]}")
+        print(f"{Fore.WHITE}Reason        :")
+        print(f"{Fore.WHITE}Highest capability score")
+        print(f"{Fore.WHITE}Lowest latency")
+        print(f"{Fore.WHITE}Healthy")
+        print(f"{Fore.WHITE}Available\n{Style.RESET_ALL}")
 
         client  = self._get_client()
         sys_msg = system_prompt or _DEFAULT_SYSTEM
@@ -169,9 +181,7 @@ class OpenRouterProvider:
 
     def _load_models(self) -> None:
         """
-        Load model lists from openrouter_models.json.
-        Each category list is ordered: best (lowest latency / most reliable) first,
-        because update_openrouter_models.py sorts them alphabetically after testing.
+        Load raw model entries from openrouter_models.json.
         Silently resets to empty lists if the file is missing or malformed.
         """
         models_file = getattr(
@@ -189,26 +199,52 @@ class OpenRouterProvider:
 
             for cat in _VALID_CATEGORIES:
                 entries = data.get(cat, [])
-                # Each entry is {"model": "...", "latency": ..., ...}
-                valid_models = []
+                self._models[cat] = []
                 for e in entries:
                     if isinstance(e, dict) and "model" in e:
-                        latency = e.get("latency", 0.0)
-                        # Health check: Skip models taking longer than 10 seconds (unhealthy/overloaded)
-                        if latency > 10.0:
-                            continue
-                        # Context/Capabilities check: We can add context checks here if available in json
-                        valid_models.append(e)
-                
-                # Strict sorting: prioritize lower latency, then lower cost
-                valid_models.sort(key=lambda x: (x.get("latency", 99.0), x.get("cost", 99.0)))
-                self._models[cat] = [m["model"] for m in valid_models]
+                        self._models[cat].append(e)
 
         except FileNotFoundError:
-            # openrouter_models.json not generated yet — that's OK.
-            # Run: python update_openrouter_models.py
             pass
-        except json.JSONDecodeError as ex:
-            print(f"[OpenRouter]: openrouter_models.json is malformed — {ex}")
         except Exception as ex:
-            print(f"[OpenRouter]: Failed to load models — {ex}")
+            from colorama import Fore
+            print(Fore.YELLOW + f"⚠️  [OpenRouter]: Failed to load models — {ex}")
+
+    def _rank_models(self, category: str) -> list[str]:
+        """
+        Dynamically rank models for a category based on multiple factors:
+        Base Score (100) - Latency Penalty + Context Bonus
+        Removes unhealthy models (latency > 10.0).
+        """
+        entries = self._models.get(category, [])
+        if not entries and category != "chat":
+            # Graceful fallback to chat category if requested category has no models
+            entries = self._models.get("chat", [])
+            
+        ranked = []
+        for e in entries:
+            latency = e.get("latency", 99.0)
+            if latency > 10.0:
+                continue # Unhealthy/Too slow
+            
+            # Base score
+            score = 100.0
+            
+            # Latency penalty (e.g. 1s = -1, 5s = -5)
+            score -= latency
+            
+            # Cost penalty
+            score -= (e.get("cost", 0.0) * 1000) # Assuming cost is in cents or dollars per 1k
+
+            # Context window bonus
+            context = e.get("context_length", 8192)
+            if context > 32000:
+                score += 10
+            elif context > 100000:
+                score += 20
+
+            ranked.append((score, e["model"]))
+
+        # Sort by highest score first
+        ranked.sort(key=lambda x: x[0], reverse=True)
+        return [r[1] for r in ranked]
