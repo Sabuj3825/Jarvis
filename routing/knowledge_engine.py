@@ -3,17 +3,18 @@ routing/knowledge_engine.py
 ============================
 Collects knowledge from multiple sources BEFORE asking any AI model.
 
-v7.1: Fully delegates to engine.knowledge_planner.KnowledgePlan which:
-  1. Detects if query needs LATEST data (Web first) or ENCYCLOPEDIC (Wiki first)
-  2. Automatically fetches more sources when confidence is low (< 0.55)
-  3. Merges all sources before returning context
+v7.2: Fully delegates to engine.knowledge_planner.KnowledgePlan which:
+  1. Always fetches Web FIRST (highest freshness score = 0.76)
+  2. Then Wikipedia for verification/background (score = 0.685)
+  3. Automatically fetches more sources when confidence is low (< 0.55)
+  4. Merges all sources before returning context
 
-Source priority per query type:
-  Latest queries  (who is CM/PM, current price, news, etc.)
-    → Web (live)  →  Wikipedia  →  Chat History
+Source priority (driven by compute_score, NOT hardcoded):
+  ALL queries → Web (0.76) → Wikipedia (0.685) → Chat History
   
-  Encyclopedic queries (what is, history of, define, etc.)
-    → Wikipedia  →  Web (fallback if Wiki confidence low)  →  Chat History
+  Source score = freshness*0.4 + authority*0.3 + reliability*0.3
+    Web:       1.0*0.4 + 0.5*0.3 + 0.7*0.3 = 0.76   (highest)
+    Wikipedia: 0.4*0.4 + 0.9*0.3 + 0.85*0.3 = 0.685 (second)
 
 Context dict keys:
     web_data    : str | None   — raw web-scrape text
@@ -61,8 +62,8 @@ class KnowledgeEngine:
     """
     Multi-source knowledge collector.
 
-    v7.1 — delegates to KnowledgePlan.collect_with_fallback():
-      - Detects freshness need (web-first vs wiki-first)
+    v7.2 — delegates to KnowledgePlan.collect_with_fallback():
+      - Web always first (freshness score 0.76 > Wikipedia 0.685)
       - Confidence-based fallback: low score → fetch more sources
       - Merges all sources into one context dict
 

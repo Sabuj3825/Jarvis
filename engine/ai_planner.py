@@ -40,15 +40,18 @@ from .provider_registry import ProviderRegistry
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Task → provider method mapping
-# Each provider must implement: complete(prompt, **kwargs) → (str|None, str|None)
+# Task → provider capability mapping
+#
+# CRITICAL: "coding" maps to "coding", NOT "chat".
+# This ensures only providers that advertise "coding" capability are used,
+# and OpenRouter receives category="coding" to select coding-optimized models.
 # ─────────────────────────────────────────────────────────────────────────────
 _TASK_CAPABILITY_MAP: dict[str, str] = {
     "chat":        "chat",
-    "coding":      "chat",       # coding uses the chat endpoint with a system prompt
+    "coding":      "coding",       # ← FIXED: was "chat", now "coding"
     "reasoning":   "reasoning",
     "vision":      "vision",
-    "web_summary": "chat",       # web summary uses chat with context injection
+    "web_summary": "web_summary",  # ← FIXED: was "chat", now "web_summary"
 }
 
 # System prompts per task (injected for providers that accept system_prompt kwarg)
@@ -118,17 +121,34 @@ class AIPlan:
             ProviderRegistry.discover(config)
             providers = ProviderRegistry.get_providers_for(capability)
 
+        # ── Rich decision logging ─────────────────────────────────────────
+        if providers:
+            provider_info = []
+            for p in providers:
+                meta = getattr(p, "_PROVIDER_META", {})
+                name = meta.get("name", "?")
+                prio = meta.get("priority", 0)
+                local = "local" if meta.get("is_local") else "cloud"
+                provider_info.append(f"{name}(p={prio},{local})")
+            print(Fore.CYAN + f"🤖 [AI Planner]: task={task} → capability={capability}")
+            print(Fore.CYAN + f"   Providers found: {' → '.join(provider_info)}")
+        else:
+            print(Fore.RED + f"🤖 [AI Planner]: task={task} → capability={capability}")
+            print(Fore.RED + f"   No providers found for '{capability}'!")
+
         if not providers:
             return None, "", f"No providers registered for capability '{capability}'"
 
         sys_p    = _system_prompt(task, getattr(config, "DEVELOPER_ALIAS", "Green Bhai"))
         errors   = []
 
-        for provider in providers:
+        for idx, provider in enumerate(providers, 1):
             meta      = getattr(provider, "_PROVIDER_META", {})
             prov_name = meta.get("name", type(provider).__name__)
 
             try:
+                print(Fore.CYAN + f"   [{idx}/{len(providers)}] Trying '{prov_name}'...")
+
                 # Each provider type has a different call signature
                 reply, err = AIPlan._call_provider(
                     provider=provider,
@@ -140,7 +160,7 @@ class AIPlan:
                 )
 
                 if reply and reply.strip():
-                    print(Fore.GREEN + f"✅ [AI Planner]: {prov_name} answered.")
+                    print(Fore.GREEN + f"✅ [AI Planner]: {prov_name} answered. (reason: first success)")
                     return reply.strip(), prov_name, None
 
                 if err:
@@ -152,7 +172,7 @@ class AIPlan:
                 print(Fore.YELLOW + f"⚠️  [AI Planner]: {prov_name} exception — {str(ex)[:60]}")
 
         err_summary = " | ".join(errors[-3:]) if errors else "unknown error"
-        print(Fore.RED + f"❌ [AI Planner]: All providers for '{task}' failed.")
+        print(Fore.RED + f"❌ [AI Planner]: All {len(providers)} providers for '{task}' failed.")
         return None, "", err_summary
 
     @staticmethod
@@ -183,9 +203,17 @@ class AIPlan:
 
         # ── OpenRouter ─────────────────────────────────────────────────────
         elif prov_name == "openrouter":
-            # Map task → openrouter category
-            or_category = "reasoning" if task == "reasoning" else \
-                          "vision"    if task == "vision"    else "chat"
+            # Map task → openrouter category for model selection
+            # Coding uses "coding" (NOT "chat") to pick coding-optimized models
+            # If openrouter_models.json has no "coding" category, the provider
+            # internally falls back to "chat" models (graceful degradation)
+            or_category_map = {
+                "coding":    "coding",
+                "reasoning": "reasoning",
+                "vision":    "vision",
+            }
+            or_category = or_category_map.get(task, "chat")
+            print(Fore.CYAN + f"   [OpenRouter]: category='{or_category}' for task='{task}'")
             return provider.complete(
                 prompt,
                 category=or_category,

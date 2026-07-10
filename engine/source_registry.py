@@ -10,13 +10,18 @@ Every knowledge source registers itself once (at import time) via:
 Sources must implement the KnowledgeSource interface:
 
     class KnowledgeSource:
-        name          : str          — unique identifier (e.g. "web", "wikipedia")
+        name              : str          — unique identifier (e.g. "web", "wikipedia")
         supported_intents : frozenset[str]  — IntentType values this source handles
-        priority      : int          — higher = tried earlier (default 5)
-        reliability   : float        — 0.0–1.0 (used by ConfidenceEngine)
+        priority          : int          — higher = tried earlier (default 5)
+        reliability       : float        — 0.0–1.0 (used by ConfidenceEngine)
+        freshness         : float        — 0.0–1.0 (how current is the data?)
+        authority         : float        — 0.0–1.0 (how authoritative is the source?)
 
         def is_available(self) -> bool: ...
         def fetch(self, query: str, **kwargs) -> str | None: ...
+
+The KnowledgePlanner uses freshness + authority + reliability to dynamically
+compute a source score — NO hardcoded source ordering.
 
 Usage
 -----
@@ -32,7 +37,6 @@ Usage
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
 from typing import Any
 
 
@@ -50,6 +54,8 @@ class KnowledgeSource:
     supported_intents: frozenset = frozenset()  # IntentType string values
     priority: int = 5                            # higher = tried first
     reliability: float = 0.7                     # used by ConfidenceEngine
+    freshness: float = 0.5                       # 0.0=stale, 1.0=real-time live
+    authority: float = 0.5                       # 0.0=unreliable, 1.0=authoritative
 
     def is_available(self) -> bool:
         """Return True when this source can be reached right now."""
@@ -61,6 +67,15 @@ class KnowledgeSource:
         Returns the raw text, or None if nothing found.
         """
         raise NotImplementedError
+
+    def compute_score(self) -> float:
+        """
+        Compute a dynamic source score from metadata.
+        Used by KnowledgePlanner to sort sources — NOT hardcoded ordering.
+        Higher score = tried first.
+        """
+        # Weighted combination: freshness matters most (40%), then authority (30%), then reliability (30%)
+        return (self.freshness * 0.4) + (self.authority * 0.3) + (self.reliability * 0.3)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -93,7 +108,7 @@ class SourceRegistry:
         available_only: bool = True,
     ) -> list[KnowledgeSource]:
         """
-        Return sources that support *intent*, sorted by priority (highest first).
+        Return sources that support *intent*, sorted by compute_score() (highest first).
 
         Parameters
         ----------
@@ -105,7 +120,8 @@ class SourceRegistry:
             if intent in s.supported_intents
             and (not available_only or s.is_available())
         ]
-        return sorted(matching, key=lambda s: s.priority, reverse=True)
+        # Sort by dynamic score (computed from freshness, authority, reliability)
+        return sorted(matching, key=lambda s: s.compute_score(), reverse=True)
 
     @classmethod
     def all_sources(cls) -> list[KnowledgeSource]:
@@ -122,17 +138,49 @@ class SourceRegistry:
 # Built-in source implementations — registered at import time
 # ─────────────────────────────────────────────────────────────────────────────
 
+# Interrogative prefixes to strip before querying Wikipedia
+# "who is the chief minister" → "chief minister"
+_WIKI_STRIP_PREFIXES = [
+    "who is the ", "who is ", "who was the ", "who was ",
+    "what is the ", "what is a ", "what is ", "what are the ", "what are ",
+    "when is the ", "when is ", "when was the ", "when was ",
+    "where is the ", "where is ", "where are the ", "where are ",
+    "how is the ", "how is ", "how does the ", "how does ", "how do ",
+    "tell me about ", "explain ", "define ",
+    "current ", "latest ",
+]
+
+
+def _clean_wiki_query(query: str) -> str:
+    """
+    Strip interrogative prefixes from a query to produce a clean noun-phrase
+    that Wikipedia can match to an article title.
+
+    "who is the chief minister of west bengal" → "chief minister of west bengal"
+    "what is machine learning"                 → "machine learning"
+    "explain recursion"                        → "recursion"
+    """
+    q = query.strip()
+    q_lower = q.lower()
+    for prefix in _WIKI_STRIP_PREFIXES:
+        if q_lower.startswith(prefix):
+            q = q[len(prefix):]
+            break
+    return q.strip() if q.strip() else query.strip()
+
+
 class WebSearchSource(KnowledgeSource):
-    """DuckDuckGo Lite scraper — live web data."""
+    """Live web scraper — highest freshness, used for current real-world data."""
 
     name              = "web"
     supported_intents = frozenset([
         "WEB_SEARCH", "UNKNOWN", "REASONING",
-        # Also available for Wikipedia queries as fresh-data fallback
-        "WIKIPEDIA",
+        "WIKIPEDIA",  # available as data source for all knowledge queries
     ])
     priority          = 8
-    reliability       = 0.7   # web snippets are decent but not always accurate
+    reliability       = 0.70   # web snippets are decent but not always accurate
+    freshness         = 1.0    # ← HIGHEST: live real-time data
+    authority         = 0.50   # varies by source website
 
     def __init__(self, scraper_fn=None):
         self._scraper = scraper_fn  # injected from commands.search_google_scrape
@@ -147,18 +195,21 @@ class WebSearchSource(KnowledgeSource):
         if not self._scraper:
             return None
         try:
-            return self._scraper(query)
+            result = self._scraper(query)
+            return result if result and result.strip() else None
         except Exception:
             return None
 
 
 class WikipediaSource(KnowledgeSource):
-    """Wikipedia summary — encyclopedic background."""
+    """Wikipedia summary — high authority, good for background/verification."""
 
     name              = "wikipedia"
     supported_intents = frozenset(["WIKIPEDIA", "WEB_SEARCH", "UNKNOWN", "REASONING"])
     priority          = 7
     reliability       = 0.85  # Wikipedia is generally well-sourced
+    freshness         = 0.40  # ← LOWER: Wikipedia can be stale for current events
+    authority         = 0.90  # ← HIGH: encyclopedic, well-referenced
 
     def is_available(self) -> bool:
         try:
@@ -168,9 +219,37 @@ class WikipediaSource(KnowledgeSource):
             return False
 
     def fetch(self, query: str, **kwargs) -> str | None:
+        """
+        Fetch Wikipedia summary for *query*.
+
+        Key fixes:
+        - Strips interrogative prefixes ("who is the" → clean noun phrase)
+        - Uses auto_suggest=False to avoid romanized/misdirected articles
+        - Falls back to auto_suggest=True if first attempt finds nothing
+        """
         try:
             import wikipedia
-            return wikipedia.summary(query, sentences=3, auto_suggest=True)
+            clean_q = _clean_wiki_query(query)
+
+            # First attempt: exact match (no auto-suggest misdirection)
+            try:
+                return wikipedia.summary(clean_q, sentences=4, auto_suggest=False)
+            except wikipedia.exceptions.PageError:
+                # Page not found with exact query — try with auto-suggest
+                try:
+                    return wikipedia.summary(clean_q, sentences=4, auto_suggest=True)
+                except Exception:
+                    return None
+            except wikipedia.exceptions.DisambiguationError as e:
+                # Take the first suggestion from disambiguation
+                if e.options:
+                    try:
+                        return wikipedia.summary(e.options[0], sentences=4, auto_suggest=False)
+                    except Exception:
+                        return None
+                return None
+        except ImportError:
+            return None
         except Exception:
             return None
 
@@ -181,7 +260,9 @@ class ChatHistorySource(KnowledgeSource):
     name              = "chat_history"
     supported_intents = frozenset(["CHAT", "MEMORY", "CODING", "REASONING"])
     priority          = 6
-    reliability       = 0.9   # user's own words are highly reliable
+    reliability       = 0.90   # user's own words are highly reliable
+    freshness         = 0.80   # current session data
+    authority         = 0.60   # user statements, not verified facts
 
     def __init__(self, chat_log_ref=None, max_turns: int = 6):
         self._chat_log = chat_log_ref or []

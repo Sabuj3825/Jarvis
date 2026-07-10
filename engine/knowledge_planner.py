@@ -1,102 +1,50 @@
-""" 
+"""
 engine/knowledge_planner.py
 ============================
-Dynamic knowledge source planner — v2.
+Dynamic knowledge source planner — v3.
 
-Two key decisions made here:
+CORE PRINCIPLE: NO hardcoded source ordering. NO "if source.name == web".
 
-1. FRESHNESS DETECTION
-   Does this query need up-to-date real-world data?
-   YES → Web first, then Wikipedia (fallback)
-   NO  → Wikipedia first (encyclopedic, stable), Web only if confidence low
+Source ordering is driven entirely by metadata scores:
+    score = freshness * 0.4 + authority * 0.3 + reliability * 0.3
 
-2. CONFIDENCE-BASED FALLBACK
-   If the first source gives a low-confidence answer (< threshold),
-   automatically collect from additional sources and merge.
+With current metadata:
+    Web         → score = 1.0*0.4 + 0.5*0.3 + 0.7*0.3 = 0.76  → ALWAYS FIRST
+    Wikipedia   → score = 0.4*0.4 + 0.9*0.3 + 0.85*0.3 = 0.685 → SECOND
+    ChatHistory → score = 0.8*0.4 + 0.6*0.3 + 0.9*0.3 = 0.77   → (only for CHAT/MEMORY)
 
-Query signals that trigger "need latest" mode
---------------------------------------------
-  who is the / current / latest / today / 2024/2025/2026
-  price / rate / news / CM / PM / CEO / election / result
-  vs.
-  encyclopedic: what is / define / explain / history / how does
+The planner:
+  1. Queries SourceRegistry for sources matching the intent
+  2. Registry returns sources sorted by compute_score() (highest first)
+  3. Fetches from each source in order using source.fetch(query) — NOT hardcoded
+  4. Scores each source's data using ConfidenceEngine
+  5. If confidence < threshold after first source → continues to next source
+  6. Merges ALL collected data into one context dict for the AI
 
 Usage
 -----
     from engine.knowledge_planner import KnowledgePlan
 
-    # Ordered list of sources for this query + intent
-    sources = KnowledgePlan.plan(intent="WIKIPEDIA", query="who is cm of wb")
-    # returns [WebSearchSource, WikipediaSource]  ← web FIRST for latest queries
-
-    # Multi-source fetch with confidence fallback
     ctx = KnowledgePlan.collect_with_fallback(
         query="who is cm of wb",
         intent="WIKIPEDIA",
-        web_scraper=fn,
+        web_scraper=commands.search_google_scrape,
         config=config,
     )
 """
 
 from __future__ import annotations
 
+from colorama import Fore
+
 from .source_registry import SourceRegistry, KnowledgeSource
-
-
-# ─────────────────────────────────────────────────────────────────────────────
-# Freshness signals — queries containing these NEED live web data first
-# ─────────────────────────────────────────────────────────────────────────────
-_LATEST_SIGNALS = frozenset([
-    # Explicit recency
-    "current", "latest", "today", "now", "recent", "live", "real-time",
-    "right now", "at present", "currently", "as of",
-    # Years (treat as dynamic)
-    "2024", "2025", "2026", "2027",
-    # Political roles that change (government/corporate)
-    "who is the", "chief minister", "prime minister", "president",
-    "cm of", "pm of", "ceo of", "coo of", "chairman", "governor",
-    "head of", "leader of", "director of", "minister of",
-    "mp from", "mla from",
-    # Financial / market data
-    "price", "rate", "stock", "crypto", "bitcoin", "dollar",
-    "exchange rate", "market", "sensex", "nifty",
-    # News / events
-    "news", "update", "happen", "result", "score", "winner",
-    "election", "match", "weather", "forecast",
-    # Sports
-    "ipl", "world cup", "champion", "won", "beat",
-])
-
-# Encyclopedic signals — these DON'T need fresh web data (Wikipedia is better)
-_ENCYCLOPEDIC_SIGNALS = frozenset([
-    "what is", "define", "definition", "explain", "meaning",
-    "history of", "origin of", "how does", "how do", "how did",
-    "who was", "when did", "where is located", "biography",
-    "concept", "theory", "formula", "equation",
-])
 
 
 class KnowledgePlan:
     """
-    Static planner — call KnowledgePlan.plan() or collect_with_fallback().
+    Stateless planner — call KnowledgePlan.collect_with_fallback() to get
+    a merged context dict from all relevant knowledge sources.
     """
-
-    @staticmethod
-    def needs_latest(query: str) -> bool:
-        """
-        Return True when the query asks for up-to-date real-world information.
-        Encyclopedic signals override latest signals when both are present.
-        """
-        q = query.lower()
-        # Encyclopedic takes priority ("what is the current theory" → wiki is fine)
-        if any(sig in q for sig in _ENCYCLOPEDIC_SIGNALS):
-            # But if there's also a strong recency word, still prefer web
-            strong_recency = any(s in q for s in [
-                "current", "latest", "today", "2026", "2025", "2024",
-                "who is the", "price", "rate", "news", "election result",
-            ])
-            return strong_recency
-        return any(sig in q for sig in _LATEST_SIGNALS)
 
     @staticmethod
     def plan(
@@ -104,30 +52,22 @@ class KnowledgePlan:
         query: str = "",
     ) -> list[KnowledgeSource]:
         """
-        Return ordered knowledge sources for *intent* and *query*.
+        Return ordered knowledge sources for *intent*.
 
-        If the query needs latest data → Web comes BEFORE Wikipedia.
-        Otherwise → Wikipedia comes first (stable, reliable).
+        Ordering is determined by each source's compute_score()
+        (freshness*0.4 + authority*0.3 + reliability*0.3).
+        NO hardcoded ordering — the source with the highest score comes first.
+
+        With default metadata:
+            Web (0.76) → Wikipedia (0.685) → ChatHistory (0.77, but only for CHAT/MEMORY)
         """
         sources = SourceRegistry.get_sources_for(intent, available_only=True)
 
         if not sources:
-            # For WIKIPEDIA intent, also allow web as fallback
+            # Fallback: try WEB_SEARCH intent sources for any unmatched intent
             sources = SourceRegistry.get_sources_for("WEB_SEARCH", available_only=True)
 
-        if not KnowledgePlan.needs_latest(query):
-            return sources   # default registry order (Wikipedia priority=7 > Web)
-
-        # Latest mode: sort so web (priority=8) beats wikipedia (priority=7)
-        # Both are already in the registry — just let priority do the work
-        # But we also want to ENSURE web is tried even for WIKIPEDIA intent
-        web_sources  = [s for s in sources if s.name == "web"]
-        wiki_sources = [s for s in sources if s.name == "wikipedia"]
-        hist_sources = [s for s in sources if s.name == "chat_history"]
-        other        = [s for s in sources if s.name not in ("web", "wikipedia", "chat_history")]
-
-        # Latest order: Web → Wikipedia → others → chat_history
-        return web_sources + wiki_sources + other + hist_sources
+        return sources  # already sorted by compute_score() in the registry
 
     @staticmethod
     def collect_with_fallback(
@@ -140,35 +80,38 @@ class KnowledgePlan:
         max_sources: int = 3,
     ) -> dict:
         """
-        Collect knowledge with automatic confidence-based fallback.
+        Collect knowledge from multiple sources with confidence-based fallback.
 
         Flow
         ----
-        1. Get ordered sources from plan()
-        2. Fetch from source[0]
-        3. Score confidence of the result
-        4. If score < threshold → fetch source[1], source[2], ...
-        5. Merge ALL collected data into one context dict
-        6. Return merged context (more data = better AI synthesis)
+        1. Get sources sorted by score from plan()
+        2. Ensure web + wikipedia are available for knowledge-bearing intents
+        3. Fetch from source[0] using source.fetch(query)
+        4. Score the fetched data
+        5. If score < threshold → fetch source[1], source[2]...
+        6. Merge ALL collected data into one context dict
+        7. Return merged context
+
+        KEY: NO hardcoded dispatch. Every source is called via source.fetch().
 
         Returns
         -------
         dict with keys: web_data, wiki_data, chat_ctx, has_context,
-                        sources_used (list of source names), needs_more_sources (bool)
+                        sources_used, confidence_scores
         """
         from engine.confidence_engine import ConfidenceEngine
-        import wikipedia as _wiki_mod
 
         ctx: dict = {
-            "web_data":         None,
-            "wiki_data":        None,
-            "chat_ctx":         None,
-            "has_context":      False,
-            "sources_used":     [],
+            "web_data":           None,
+            "wiki_data":          None,
+            "chat_ctx":           None,
+            "has_context":        False,
+            "sources_used":       [],
+            "confidence_scores":  {},
             "needs_more_sources": False,
         }
 
-        # ── Inject runtime dependencies into registry ─────────────────────────
+        # ── Inject runtime dependencies into registry ─────────────────────
         from engine.source_registry import configure_web_scraper, configure_chat_log
         if web_scraper:
             configure_web_scraper(web_scraper)
@@ -176,19 +119,35 @@ class KnowledgePlan:
             max_turns = getattr(config, "MAX_CHAT_HISTORY", 6)
             configure_chat_log(chat_log, max_turns)
 
-        # ── Get source order for this query ───────────────────────────────────
-        # For WIKIPEDIA intent, explicitly add web as potential source
-        all_source_names = {s.name for s in SourceRegistry.all_sources()}
+        # ── Get source order for this query (sorted by compute_score) ─────
         sources = KnowledgePlan.plan(intent, query)
 
-        # For WIKIPEDIA intent, always include web as a potential fallback
-        if intent in ("WIKIPEDIA", "REASONING") and "web" not in [s.name for s in sources]:
-            web_srcs = SourceRegistry.get_sources_for("WEB_SEARCH", available_only=True)
-            if KnowledgePlan.needs_latest(query):
-                sources = web_srcs + sources   # web FIRST
-            else:
-                sources = sources + web_srcs   # web as fallback
+        # For knowledge-bearing intents, ensure BOTH web and wikipedia are included
+        # (they might not be in the plan if the intent is CHAT or CODING)
+        _KNOWLEDGE_INTENTS = {"WEB_SEARCH", "WIKIPEDIA", "UNKNOWN", "REASONING"}
+        if intent in _KNOWLEDGE_INTENTS:
+            source_names = {s.name for s in sources}
 
+            # Add web if missing
+            if "web" not in source_names:
+                web_srcs = SourceRegistry.get_sources_for("WEB_SEARCH", available_only=True)
+                web_only = [s for s in web_srcs if s.name == "web"]
+                sources = web_only + sources
+
+            # Add wikipedia if missing (as verification/background)
+            if "wikipedia" not in source_names:
+                wiki_srcs = SourceRegistry.get_sources_for("WIKIPEDIA", available_only=True)
+                wiki_only = [s for s in wiki_srcs if s.name == "wikipedia"]
+                sources = sources + wiki_only
+
+            # Re-sort by score so the ordering is always dynamic
+            sources = sorted(sources, key=lambda s: s.compute_score(), reverse=True)
+
+        # ── Log the plan ──────────────────────────────────────────────────
+        plan_names = [f"{s.name}({s.compute_score():.2f})" for s in sources]
+        print(Fore.CYAN + f"📋 [Planner]: Source plan → {' → '.join(plan_names)}")
+
+        # ── Fetch from each source in order ───────────────────────────────
         current_confidence = 0.0
         fetched = 0
 
@@ -196,77 +155,70 @@ class KnowledgePlan:
             if fetched >= max_sources:
                 break
 
-            # Skip if we already have high confidence and don't need more data
-            if current_confidence >= 0.75 and fetched >= 1:
+            # If we have enough confidence from multiple sources, stop
+            if current_confidence >= 0.75 and fetched >= 2:
+                print(Fore.CYAN + f"✅ [Planner]: Confidence {current_confidence:.2f} ≥ 0.75 with {fetched} sources — stopping.")
                 break
 
             try:
-                if source.name == "web":
-                    if web_scraper is None:
-                        continue
-                    print("🌐 [Knowledge Engine]: Fetching live web data...")
-                    data = web_scraper(query)
-                    if data and data.strip():
-                        ctx["web_data"] = data.strip()
-                        ctx["sources_used"].append("web")
-                        fetched += 1
-                        print(f"✅ [Knowledge Engine]: Web — {len(data)} chars captured.")
-                        # Score this result
-                        score = ConfidenceEngine.score(
-                            answer=data, sources={"web": data[:200]}, source_name="web"
-                        )
-                        current_confidence = max(current_confidence, score)
-                        print(f"🎯 [Planner]: Web confidence = {score:.2f}")
-                    else:
-                        print("⚠️  [Knowledge Engine]: Web scraper returned empty.")
+                print(Fore.CYAN + f"🔍 [Planner]: Fetching from '{source.name}' (score={source.compute_score():.2f})...")
 
-                elif source.name == "wikipedia":
-                    print("📖 [Knowledge Engine]: Fetching Wikipedia data...")
-                    try:
-                        wiki_text = _wiki_mod.summary(query, sentences=4, auto_suggest=True)
-                        if wiki_text and wiki_text.strip():
-                            ctx["wiki_data"] = wiki_text.strip()
-                            ctx["sources_used"].append("wikipedia")
-                            fetched += 1
-                            print(f"✅ [Knowledge Engine]: Wikipedia — {len(wiki_text)} chars captured.")
-                            # Score this result
-                            score = ConfidenceEngine.score(
-                                answer=wiki_text, sources={"wikipedia": wiki_text[:200]},
-                                source_name="wikipedia"
-                            )
-                            if current_confidence < score:
-                                current_confidence = score
-                            print(f"🎯 [Planner]: Wikipedia confidence = {score:.2f}")
-                            # If confidence is LOW, flag that we need more sources
-                            if score < confidence_threshold:
-                                ctx["needs_more_sources"] = True
-                                print(f"⚠️  [Planner]: Confidence {score:.2f} < {confidence_threshold} — fetching more sources...")
-                    except Exception as wiki_ex:
-                        print(f"⚠️  [Knowledge Engine]: Wikipedia — {str(wiki_ex)[:80]}")
+                # ── UNIFIED FETCH — source.fetch() handles ALL source-specific logic
+                data = source.fetch(query)
 
-                elif source.name == "chat_history":
-                    if chat_log:
-                        max_h = getattr(config, "MAX_CHAT_HISTORY", 6)
-                        recent = chat_log[-max_h:]
-                        lines  = []
-                        for entry in recent:
-                            role = "You" if entry.get("role") == "user" else "Jarvis"
-                            text = entry.get("text", "").strip()
-                            if text:
-                                lines.append(f"{role}: {text}")
-                        if lines:
-                            ctx["chat_ctx"] = "\n".join(lines)
-                            ctx["sources_used"].append("chat_history")
+                if data and data.strip():
+                    data = data.strip()
+                    fetched += 1
+
+                    # Store in the correct context key based on source name
+                    _store_source_data(ctx, source.name, data)
+                    ctx["sources_used"].append(source.name)
+
+                    print(Fore.GREEN + f"✅ [Planner]: {source.name} — {len(data)} chars captured.")
+
+                    # Score this source's data
+                    score = ConfidenceEngine.score(
+                        answer=data,
+                        sources={source.name: data[:300]},
+                        source_name=source.name,
+                    )
+                    ctx["confidence_scores"][source.name] = score
+                    current_confidence = max(current_confidence, score)
+
+                    label = ConfidenceEngine.label(score)
+                    print(Fore.CYAN + f"🎯 [Planner]: {source.name} confidence = {score:.2f} ({label})")
+
+                    # If confidence is LOW, flag and continue to next source
+                    if score < confidence_threshold:
+                        ctx["needs_more_sources"] = True
+                        print(Fore.YELLOW + f"⚠️  [Planner]: {score:.2f} < {confidence_threshold} — fetching more sources...")
+                else:
+                    print(Fore.YELLOW + f"⚠️  [Planner]: {source.name} returned empty.")
 
             except Exception as ex:
-                print(f"⚠️  [Planner]: Source '{source.name}' error — {str(ex)[:60]}")
+                print(Fore.YELLOW + f"⚠️  [Planner]: {source.name} error — {str(ex)[:80]}")
 
+        # ── Summary ───────────────────────────────────────────────────────
         ctx["has_context"] = bool(ctx.get("web_data") or ctx.get("wiki_data"))
 
         if ctx["sources_used"]:
             merged_label = " + ".join(ctx["sources_used"])
-            print(f"🔗 [Planner]: Merged sources → {merged_label} (confidence={current_confidence:.2f})")
+            print(Fore.CYAN + f"🔗 [Planner]: Merged → {merged_label} (best_confidence={current_confidence:.2f})")
 
         return ctx
 
 
+def _store_source_data(ctx: dict, source_name: str, data: str) -> None:
+    """
+    Map a source name to the correct context dict key.
+
+    This is the ONLY place where source names map to context keys.
+    New sources can be added by extending this mapping.
+    """
+    _SOURCE_TO_CTX_KEY = {
+        "web":          "web_data",
+        "wikipedia":    "wiki_data",
+        "chat_history": "chat_ctx",
+    }
+    key = _SOURCE_TO_CTX_KEY.get(source_name, f"{source_name}_data")
+    ctx[key] = data

@@ -154,6 +154,59 @@ def run_test_suite():
     )
 
     # =========================================================================
+    # SECTION 5: KNOWLEDGE & AI PLANNING ENGINE (v7 Architecture)
+    # =========================================================================
+    print(f"\n{Fore.CYAN}{Style.BRIGHT}[SECTION 5: KNOWLEDGE & AI PLANNING ENGINE]")
+
+    # Check Source Registry Metadata
+    try:
+        from engine.source_registry import SourceRegistry
+        web_src = next((s for s in SourceRegistry.all_sources() if s.name == "web"), None)
+        wiki_src = next((s for s in SourceRegistry.all_sources() if s.name == "wikipedia"), None)
+        sources_ok = web_src and wiki_src and web_src.compute_score() > wiki_src.compute_score()
+    except Exception:
+        sources_ok = False
+
+    assert_test(
+        "Source Registry Metadata Scoring",
+        sources_ok,
+        "Dynamic scoring active. Web freshness score > Wikipedia.",
+        "Source metadata missing or Web is not scored highest."
+    )
+
+    # Check AI Planner Capability Map
+    try:
+        from engine.ai_planner import _TASK_CAPABILITY_MAP
+        coding_map_ok = _TASK_CAPABILITY_MAP.get("coding") == "coding"
+    except Exception:
+        coding_map_ok = False
+
+    assert_test(
+        "AI Planner Capability Mapping",
+        coding_map_ok,
+        "Task 'coding' correctly mapped to capability 'coding'.",
+        "Coding task mismapped to chat. OpenRouter coding models won't trigger."
+    )
+
+    # Check Knowledge Planner Ordering
+    try:
+        from engine.knowledge_planner import KnowledgePlan
+        from engine.source_registry import configure_web_scraper
+        # Mock web scraper so WebSearchSource.is_available() returns True
+        configure_web_scraper(lambda q: "mock")
+        plan_srcs = KnowledgePlan.plan("WEB_SEARCH", "what is machine learning")
+        planner_ok = plan_srcs and plan_srcs[0].name == "web"
+    except Exception:
+        planner_ok = False
+
+    assert_test(
+        "Knowledge Planner Routing",
+        planner_ok,
+        "Knowledge planner prioritizes Web first for all queries.",
+        "Knowledge planner not putting Web in priority slot 0."
+    )
+
+    # =========================================================================
     # DIAGNOSTIC SUMMARY REPORT
     # =========================================================================
     print("\n" + Fore.MAGENTA + Style.BRIGHT + "====================================================")
